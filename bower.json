@@ -1,0 +1,25 @@
+{
+  "name": "show-table-tool",
+  "version": "0.1.0",
+  "homepage": "https://github.com/alexkalderimis/show-table-tool",
+  "authors": [
+    "Alex Kalderimis <alexkalderimis@gmail.com>"
+  ],
+  "description": "An intermine steps tool for showing a results table.",
+  "main": "index.js",
+  "moduleType": [
+    "amd"
+  ],
+  "license": "Apache2",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "im-tables": "~1.7.0",
+    "jschannel": "mozilla/jschannel"
+  }
+}
