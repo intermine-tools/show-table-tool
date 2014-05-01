@@ -3,7 +3,12 @@
   "version": "0.1.0",
   "description": "A tool to show a results table in intermine-steps",
   "main": "index.js",
+  "config": {
+    "port": 5000
+  },
   "scripts": {
+    "start": "serve -p $PORT",
+    "prestart": "bower install",
     "test": "npm test"
   },
   "repository": {
