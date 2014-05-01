@@ -2,13 +2,16 @@
   "name": "show-table-tool",
   "version": "0.1.0",
   "description": "A tool to show a results table in intermine-steps",
-  "main": "index.js",
+  "main": "server.js",
   "config": {
     "port": 5000
   },
+  "engines": {
+    "node": ">=0.10.0",
+    "npm": ">=1.3"
+  },
   "scripts": {
-    "start": "serve -p $PORT",
-    "prestart": "bower install",
+    "postinstall": "bower install",
     "test": "npm test"
   },
   "repository": {
@@ -27,9 +30,9 @@
   },
   "homepage": "https://github.com/alexkalderimis/show-table-tool",
   "devDependencies": {
-    "bower": "~1.3.3"
   },
   "dependencies": {
-    "serve": "~1.3.0"
+    "express": "~4.1.1",
+    "bower": "~1.3.3"
   }
 }
