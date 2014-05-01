@@ -32,7 +32,7 @@
   "devDependencies": {
   },
   "dependencies": {
-    "express": ">=4.0.0",
+    "express": ">=3.4.8",
     "bower": "~1.2.8"
   }
 }
