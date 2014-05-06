@@ -35,17 +35,6 @@ function runAsChild () {
     return 'ok';
   });
 
-  chan.bind('style', function (trans, params) {
-
-    var head = document.getElementsByTagName("head")[0];
-    var link = document.createElement('link');
-
-    link.rel = "stylesheet";
-    link.href = params.stylesheet;
-
-    head.appendChild(link);
-
-  });
 }
 
 function merge(x, y) {
