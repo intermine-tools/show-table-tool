@@ -5,6 +5,16 @@ var chan = Channel.build({
 });
 
 chan.call({
+  method: 'configure',
+  params: {
+    IndicateOffHostLinks: false
+  },
+  success: function () {
+    console.log("Configured");
+  }
+});
+
+chan.call({
   method: "init",
   params: {
     url: "http://www.flymine.org/query",

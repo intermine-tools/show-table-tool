@@ -1,3 +1,5 @@
+'use strict';
+
 var container;
 
 jQuery(function () {
@@ -15,6 +17,11 @@ function runAsChild () {
     scope: "CurrentStep"
   });
 
+  chan.bind('configure', function (trans, params) {
+    merge(intermine.options, params);
+    return 'ok';
+  });
+
   chan.bind("init", function(trans, params) {
     console.log(params, container.length);
 
@@ -27,6 +34,19 @@ function runAsChild () {
 
     return 'ok';
   });
+}
+
+function merge(x, y) {
+  var key, value;
+  if (!y) return;
+  for (key in y) {
+    value = y[key];
+    if (_.isArray(value) || !_.isObject(value) || !x[key]) {
+      x[key] = value;
+    } else {
+      merge(x[key], value);
+    }
+  }
 }
 
 function showDemo () {
