@@ -11,7 +11,7 @@ jQuery(function () {
 });
 
 function runAsChild () {
-  var chan, key;
+  var chan;
 
   chan = Channel.build({
     window: window.parent,
@@ -25,21 +25,42 @@ function runAsChild () {
   });
 
   chan.bind("init", function(trans, params) {
+    var events = {
+      'list-creation:success': reportList.bind(null, chan),
+      'list-update:success': reportList.bind(null, chan)
+    };
     container.imWidget({
       type: 'table',
       url:   params.url,
       token: params.token,
-      query: params.query
+      query: params.query,
+      events: events
     });
 
     return 'ok';
   });
 
   // Activate all formatters.
-  for (key in intermine.results.formatsets.genomic) {
-    intermine.results.formatsets.genomic[key] = true;
-  }
+  enableAll(intermine.results.formatsets.genomic);
 
+}
+
+function reportList (channel, list) {
+  channel.notify({
+    method: 'has-list',
+    params: {
+      root: list.service.root,
+      name: list.name,
+      type: list.type
+    }
+  });
+}
+
+function enableAll(obj) {
+  var key;
+  for (key in obj) {
+    obj[key] = true;
+  }
 }
 
 function merge(x, y) {
