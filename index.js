@@ -11,7 +11,9 @@ jQuery(function () {
 });
 
 function runAsChild () {
-  var chan = Channel.build({
+  var chan, key;
+
+  chan = Channel.build({
     window: window.parent,
     origin: "*",
     scope: "CurrentStep"
@@ -23,8 +25,6 @@ function runAsChild () {
   });
 
   chan.bind("init", function(trans, params) {
-    console.log(params, container.length);
-
     container.imWidget({
       type: 'table',
       url:   params.url,
@@ -34,6 +34,11 @@ function runAsChild () {
 
     return 'ok';
   });
+
+  // Activate all formatters.
+  for (key in intermine.results.formatsets.genomic) {
+    intermine.results.formatsets.genomic[key] = true;
+  }
 
 }
 
