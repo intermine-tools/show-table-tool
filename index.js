@@ -29,11 +29,14 @@ function runAsChild () {
       'list-creation:success': reportList.bind(null, chan),
       'list-update:success': reportList.bind(null, chan)
     };
+    var props = merge({pageSize: 25}, (params.prop || {}));
+    console.log(props);
     container.imWidget({
       type: 'table',
       url:   params.url,
       token: params.token,
       query: params.query,
+      properties: props,
       events: events
     });
 
@@ -74,6 +77,7 @@ function merge(x, y) {
       merge(x[key], value);
     }
   }
+  return x;
 }
 
 function showDemo () {
