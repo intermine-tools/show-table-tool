@@ -50,11 +50,14 @@ function runAsChild () {
 
 function reportList (channel, list) {
   channel.notify({
-    method: 'has-list',
+    method: 'next-step',
     params: {
-      root: list.service.root,
-      name: list.name,
-      type: list.type
+      title: 'Created list ' + list.name,
+      tool: 'show-list',
+      data: {
+        listName: list.name,
+        service: { root: list.service.root }
+      }
     }
   });
 }
