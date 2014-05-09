@@ -33,8 +33,8 @@ function runAsChild () {
     console.log(props);
     container.imWidget({
       type: 'table',
-      url:   params.url,
-      token: params.token,
+      url:   (params.url || (params.service && params.service.root)),
+      token: (params.token || (params.service && params.service.token)),
       query: params.query,
       properties: props,
       events: events
