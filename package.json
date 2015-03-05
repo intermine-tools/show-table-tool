@@ -33,8 +33,7 @@
   "devDependencies": {},
   "browserify": {
     "transform": [
-      "coffeeify",
-      "debowerify"
+      "coffeeify"
     ]
   },
   "dependencies": {
@@ -43,10 +42,14 @@
     "browserify-shim": "^3.8.2",
     "coffee-script": "^1.9.1",
     "coffeeify": "~0.7.0",
-    "debowerify": "^1.2.0",
     "express": ">=3.4.8",
     "gulp": "^3.8.7",
-    "imtables": "2.0.0-beta-8",
-    "vinyl-source-stream": "^1.0.0"
+    "gulp-rename": "^1.2.0",
+    "gulp-watch": "^4.1.1",
+    "imtables": "2.0.0-beta-11",
+    "jschannel": "alexkalderimis/jschannel",
+    "vinyl-source-stream": "^1.0.0",
+    "vinyl-transform": "^1.0.0",
+    "watchify": "^2.4.0"
   }
 }

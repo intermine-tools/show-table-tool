@@ -7,7 +7,7 @@
 
     <link rel="stylesheet"
           type="text/css"
-          href="/imtables/dist/main.css">
+          href="http://cdn.intermine.org/js/intermine/im-tables/2.0.0-beta/main.css">
 
     <!-- Wrapper -->
     <script type="text/javascript" src="./js/tool.js"></script>
@@ -16,9 +16,12 @@
 
   <body>
 
-    <div id="results-table">
-        <button onclick="showDemo()">Show demo</button>
-    </div>
+    <div id="results-table"></div>
 
   </body>
+
+  <style>
+    /** The history is controlled by the parent **/
+    .im-undo-history { display: none; }
+  </style>
 </html>
