@@ -1,6 +1,6 @@
 Channel = require 'jschannel'
-imtables = require 'imtables'
-clf = require 'imtables/build/formatters/genomic/location'
+imtables = require 'im-tables'
+clf = require '../node_modules/im-tables/build/formatters/genomic/location'
 
 pluralize = require 'pluralize'
 
@@ -125,4 +125,3 @@ window.onload = ->
     showDemo().then console.log.bind(console), console.error.bind(console)
   else
     runAsChild()
-
