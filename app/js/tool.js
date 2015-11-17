@@ -180,7 +180,7 @@ window.onload = function() {
 
 
 
-},{"../node_modules/im-tables/build/formatters/genomic/location":49,"im-tables":52,"jschannel":315,"pluralize":316}],2:[function(require,module,exports){
+},{"../node_modules/im-tables/build/formatters/genomic/location":49,"im-tables":52,"jschannel":318,"pluralize":319}],2:[function(require,module,exports){
 
 },{}],3:[function(require,module,exports){
 arguments[4][2][0].apply(exports,arguments)
@@ -234,20 +234,22 @@ var rootParent = {}
  */
 Buffer.TYPED_ARRAY_SUPPORT = global.TYPED_ARRAY_SUPPORT !== undefined
   ? global.TYPED_ARRAY_SUPPORT
-  : (function () {
-      function Bar () {}
-      try {
-        var arr = new Uint8Array(1)
-        arr.foo = function () { return 42 }
-        arr.constructor = Bar
-        return arr.foo() === 42 && // typed array instances can be augmented
-            arr.constructor === Bar && // constructor can be set
-            typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
-            arr.subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
-      } catch (e) {
-        return false
-      }
-    })()
+  : typedArraySupport()
+
+function typedArraySupport () {
+  function Bar () {}
+  try {
+    var arr = new Uint8Array(1)
+    arr.foo = function () { return 42 }
+    arr.constructor = Bar
+    return arr.foo() === 42 && // typed array instances can be augmented
+        arr.constructor === Bar && // constructor can be set
+        typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
+        arr.subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
+  } catch (e) {
+    return false
+  }
+}
 
 function kMaxLength () {
   return Buffer.TYPED_ARRAY_SUPPORT
@@ -1201,7 +1203,7 @@ Buffer.prototype.writeUInt8 = function writeUInt8 (value, offset, noAssert) {
   offset = offset | 0
   if (!noAssert) checkInt(this, value, offset, 1, 0xff, 0)
   if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
-  this[offset] = value
+  this[offset] = (value & 0xff)
   return offset + 1
 }
 
@@ -1218,7 +1220,7 @@ Buffer.prototype.writeUInt16LE = function writeUInt16LE (value, offset, noAssert
   offset = offset | 0
   if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
   if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = value
+    this[offset] = (value & 0xff)
     this[offset + 1] = (value >>> 8)
   } else {
     objectWriteUInt16(this, value, offset, true)
@@ -1232,7 +1234,7 @@ Buffer.prototype.writeUInt16BE = function writeUInt16BE (value, offset, noAssert
   if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
   if (Buffer.TYPED_ARRAY_SUPPORT) {
     this[offset] = (value >>> 8)
-    this[offset + 1] = value
+    this[offset + 1] = (value & 0xff)
   } else {
     objectWriteUInt16(this, value, offset, false)
   }
@@ -1254,7 +1256,7 @@ Buffer.prototype.writeUInt32LE = function writeUInt32LE (value, offset, noAssert
     this[offset + 3] = (value >>> 24)
     this[offset + 2] = (value >>> 16)
     this[offset + 1] = (value >>> 8)
-    this[offset] = value
+    this[offset] = (value & 0xff)
   } else {
     objectWriteUInt32(this, value, offset, true)
   }
@@ -1269,7 +1271,7 @@ Buffer.prototype.writeUInt32BE = function writeUInt32BE (value, offset, noAssert
     this[offset] = (value >>> 24)
     this[offset + 1] = (value >>> 16)
     this[offset + 2] = (value >>> 8)
-    this[offset + 3] = value
+    this[offset + 3] = (value & 0xff)
   } else {
     objectWriteUInt32(this, value, offset, false)
   }
@@ -1322,7 +1324,7 @@ Buffer.prototype.writeInt8 = function writeInt8 (value, offset, noAssert) {
   if (!noAssert) checkInt(this, value, offset, 1, 0x7f, -0x80)
   if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
   if (value < 0) value = 0xff + value + 1
-  this[offset] = value
+  this[offset] = (value & 0xff)
   return offset + 1
 }
 
@@ -1331,7 +1333,7 @@ Buffer.prototype.writeInt16LE = function writeInt16LE (value, offset, noAssert) 
   offset = offset | 0
   if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
   if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = value
+    this[offset] = (value & 0xff)
     this[offset + 1] = (value >>> 8)
   } else {
     objectWriteUInt16(this, value, offset, true)
@@ -1345,7 +1347,7 @@ Buffer.prototype.writeInt16BE = function writeInt16BE (value, offset, noAssert) 
   if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
   if (Buffer.TYPED_ARRAY_SUPPORT) {
     this[offset] = (value >>> 8)
-    this[offset + 1] = value
+    this[offset + 1] = (value & 0xff)
   } else {
     objectWriteUInt16(this, value, offset, false)
   }
@@ -1357,7 +1359,7 @@ Buffer.prototype.writeInt32LE = function writeInt32LE (value, offset, noAssert) 
   offset = offset | 0
   if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
   if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = value
+    this[offset] = (value & 0xff)
     this[offset + 1] = (value >>> 8)
     this[offset + 2] = (value >>> 16)
     this[offset + 3] = (value >>> 24)
@@ -1376,7 +1378,7 @@ Buffer.prototype.writeInt32BE = function writeInt32BE (value, offset, noAssert) 
     this[offset] = (value >>> 24)
     this[offset + 1] = (value >>> 16)
     this[offset + 2] = (value >>> 8)
-    this[offset + 3] = value
+    this[offset + 3] = (value & 0xff)
   } else {
     objectWriteUInt32(this, value, offset, false)
   }
@@ -1651,7 +1653,7 @@ function utf8ToBytes (string, units) {
       }
 
       // valid surrogate pair
-      codePoint = leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00 | 0x10000
+      codePoint = (leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00) + 0x10000
     } else if (leadSurrogate) {
       // valid bmp char, but last char was a lead
       if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
@@ -5520,8 +5522,8 @@ exports.isBuffer = isBuffer;
 function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
-}).call(this,{"isBuffer":require("/home/josh/src/intermine-tools/show-table-tool/node_modules/browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js")})
-},{"/home/josh/src/intermine-tools/show-table-tool/node_modules/browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":14}],28:[function(require,module,exports){
+}).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
+},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":14}],28:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
 },{"./lib/_stream_passthrough.js":23}],29:[function(require,module,exports){
@@ -7291,7 +7293,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"./options":100,"es6-promise":284,"jquery":312,"underscore":314}],38:[function(require,module,exports){
+},{"./options":100,"es6-promise":286,"jquery":314,"underscore":317}],38:[function(require,module,exports){
 (function() {
   var Backbone, CoreModel, invert,
     __hasProp = {}.hasOwnProperty,
@@ -7373,7 +7375,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"backbone":269}],39:[function(require,module,exports){
+},{"backbone":271}],39:[function(require,module,exports){
 (function() {
   var $, Backbone, CoreModel, CoreView, Event, Icons, IndeterminateProgressBar, Messages, Templates, getKid, helpers, kid, listenToCollection, listenToModel, listenToState, listenToThing, onChange, _,
     __hasProp = {}.hasOwnProperty,
@@ -7779,7 +7781,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"./core-model":38,"./event":47,"./icons":51,"./messages":53,"./shim":103,"./templates":104,"./templates/helpers":105,"./utils/on-change":130,"backbone":269,"jquery":312,"underscore":314}],40:[function(require,module,exports){
+},{"./core-model":38,"./event":47,"./icons":51,"./messages":53,"./shim":103,"./templates":104,"./templates/helpers":105,"./utils/on-change":131,"backbone":271,"jquery":314,"underscore":317}],40:[function(require,module,exports){
 (function() {
   var Checkbox, CoreView, Messages, Templates,
     __hasProp = {}.hasOwnProperty,
@@ -7890,7 +7892,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../core-model":38,"backbone":269}],42:[function(require,module,exports){
+},{"../core-model":38,"backbone":271}],42:[function(require,module,exports){
 (function() {
   var CoreView, InputWithButton, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -7969,7 +7971,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../core-view":39,"../templates":104,"underscore":314}],43:[function(require,module,exports){
+},{"../core-view":39,"../templates":104,"underscore":317}],43:[function(require,module,exports){
 (function() {
   var CoreView, InputWithLabel, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -8093,7 +8095,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../core-view":39,"../templates":104,"underscore":314}],44:[function(require,module,exports){
+},{"../core-view":39,"../templates":104,"underscore":317}],44:[function(require,module,exports){
 (function() {
   var Model, NestedModel, isPlainObject, mergeOldAndNew, setSection, _,
     __hasProp = {}.hasOwnProperty,
@@ -8246,7 +8248,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../core-model":38,"underscore":314}],45:[function(require,module,exports){
+},{"../core-model":38,"underscore":317}],45:[function(require,module,exports){
 (function() {
   var InputWithLabel, SelectWithLabel, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -8312,7 +8314,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../templates":104,"./input-with-label":43,"underscore":314}],46:[function(require,module,exports){
+},{"../templates":104,"./input-with-label":43,"underscore":317}],46:[function(require,module,exports){
 (function() {
   var ArrayOf, Backbone, Callable, CoreCollection, CoreModel, DataModel, InstanceOfAssertion, InterMineService, IsArray, StringType, StructuralTypeAssertion, _,
     __slice = [].slice;
@@ -8543,7 +8545,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../core-model":38,"./collection":41,"backbone":269,"underscore":314}],47:[function(require,module,exports){
+},{"../core-model":38,"./collection":41,"backbone":271,"underscore":317}],47:[function(require,module,exports){
 (function() {
   var Event;
 
@@ -8598,7 +8600,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../../utils/simple-formatter":141}],50:[function(require,module,exports){
+},{"../../utils/simple-formatter":143}],50:[function(require,module,exports){
 (function() {
   var NestedModel, Templates, bool, enableFormatter, formatters, getAncestors, getFormatter, lastCd, _;
 
@@ -8729,7 +8731,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"./core/nested-model":44,"./templates":104,"underscore":314}],51:[function(require,module,exports){
+},{"./core/nested-model":44,"./templates":104,"underscore":317}],51:[function(require,module,exports){
 (function() {
   var ICONS, Icons, Model, Options, registerIconSet, _,
     __hasProp = {}.hasOwnProperty,
@@ -8999,7 +9001,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"./core-model":38,"./options":100,"underscore":314}],52:[function(require,module,exports){
+},{"./core-model":38,"./options":100,"underscore":317}],52:[function(require,module,exports){
 (function() {
   var Dashboard, Formatting, Messages, Options, Promise, Table, Types, asElement, connect, createView, load, simpleFormatter, version, _;
 
@@ -9096,7 +9098,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"./core/type-assertions":46,"./formatting":50,"./messages":53,"./options":100,"./shim":103,"./utils/simple-formatter":141,"./version":148,"./views/dashboard":173,"./views/table":246,"es6-promise":284,"imjs":293,"underscore":314}],53:[function(require,module,exports){
+},{"./core/type-assertions":46,"./formatting":50,"./messages":53,"./options":100,"./shim":103,"./utils/simple-formatter":143,"./version":150,"./views/dashboard":175,"./views/table":248,"es6-promise":286,"imjs":295,"underscore":317}],53:[function(require,module,exports){
 (function() {
   var Backbone, DEFAULTS, HELPERS, Messages, actionMessages, common, numToString, pluralise, _, _ref,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -9191,7 +9193,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"./messages/actions":54,"./messages/common":57,"./templates/helpers":105,"backbone":269,"underscore":314}],54:[function(require,module,exports){
+},{"./messages/actions":54,"./messages/common":57,"./templates/helpers":105,"backbone":271,"underscore":317}],54:[function(require,module,exports){
 (function() {
   module.exports = {
     'export.Export': 'Export',
@@ -9776,7 +9778,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"jquery":312}],68:[function(require,module,exports){
+},{"jquery":314}],68:[function(require,module,exports){
 (function() {
   var _;
 
@@ -9810,7 +9812,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"underscore":314}],69:[function(require,module,exports){
+},{"underscore":317}],69:[function(require,module,exports){
 (function() {
   var _;
 
@@ -9858,7 +9860,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"underscore":314}],70:[function(require,module,exports){
+},{"underscore":317}],70:[function(require,module,exports){
 (function() {
   var CACHE, _;
 
@@ -9939,7 +9941,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"underscore":314}],71:[function(require,module,exports){
+},{"underscore":317}],71:[function(require,module,exports){
 (function() {
   exports.setPathNames = function() {
     var end, q, s, service, set, setError, type, v, _ref, _ref1;
@@ -9996,7 +9998,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../core-model":38,"underscore":314}],73:[function(require,module,exports){
+},{"../core-model":38,"underscore":317}],73:[function(require,module,exports){
 (function() {
   var AvailableColumns, Collection, PathModel, cmp, displayName, partsLen,
     __hasProp = {}.hasOwnProperty,
@@ -10156,7 +10158,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../core-model":38,"../options":100,"es6-promise":284,"underscore":314}],75:[function(require,module,exports){
+},{"../core-model":38,"../options":100,"es6-promise":286,"underscore":317}],75:[function(require,module,exports){
 (function() {
   var CodeGenModel, CoreModel, Options,
     __hasProp = {}.hasOwnProperty,
@@ -10242,19 +10244,19 @@ function hasOwnProperty(obj, prop) {
 
 },{"../core/collection":41,"../utils/build-headers":108,"./header":81}],77:[function(require,module,exports){
 (function() {
-  var ConstraintModel, LIST_OPS, LOOP_OPS, PathModel, RANGE_OPS, TERNARY_OPS, constraintType, _, _ref,
+  var ConstraintModel, LIST_OPS, LOOP_OPS, NULL_OPS, PathModel, RANGE_OPS, TERNARY_OPS, constraintType, _, _ref,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   _ = require('underscore');
 
-  _ref = require('imjs').Query, LIST_OPS = _ref.LIST_OPS, LOOP_OPS = _ref.LOOP_OPS, TERNARY_OPS = _ref.TERNARY_OPS, RANGE_OPS = _ref.RANGE_OPS;
+  _ref = require('imjs').Query, LIST_OPS = _ref.LIST_OPS, LOOP_OPS = _ref.LOOP_OPS, TERNARY_OPS = _ref.TERNARY_OPS, RANGE_OPS = _ref.RANGE_OPS, NULL_OPS = _ref.NULL_OPS;
 
   PathModel = require('./path');
 
   constraintType = function(opts) {
-    var _ref1, _ref2, _ref3, _ref4;
+    var _ref1, _ref2, _ref3, _ref4, _ref5;
     if (opts.path.isAttribute()) {
       if (opts.values) {
         return 'MULTI_VALUE';
@@ -10278,6 +10280,9 @@ function hasOwnProperty(obj, prop) {
       }
       if ((_ref4 = opts.op, __indexOf.call(LOOP_OPS, _ref4) >= 0)) {
         return 'LOOP';
+      }
+      if ((_ref5 = opts.op, __indexOf.call(NULL_OPS, _ref5) >= 0)) {
+        return opts.op;
       }
     }
     throw new Error("Cannot determine constraint type: " + opts.path + " " + opts.op);
@@ -10327,7 +10332,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"./path":93,"imjs":293,"underscore":314}],78:[function(require,module,exports){
+},{"./path":93,"imjs":295,"underscore":317}],78:[function(require,module,exports){
 (function() {
   var CoreCollection, CoreModel, CreateListModel, ON_COMMA, trim, _,
     __hasProp = {}.hasOwnProperty,
@@ -10430,7 +10435,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../core-model":38,"../core/collection":41,"underscore":314}],79:[function(require,module,exports){
+},{"../core-model":38,"../core/collection":41,"underscore":317}],79:[function(require,module,exports){
 (function() {
   var Format, formats, _;
 
@@ -10555,7 +10560,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"underscore":314}],80:[function(require,module,exports){
+},{"underscore":317}],80:[function(require,module,exports){
 (function() {
   var CoreModel, FPObject,
     __hasProp = {}.hasOwnProperty,
@@ -10729,7 +10734,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../options":100,"./path":93,"underscore":314}],82:[function(require,module,exports){
+},{"../options":100,"./path":93,"underscore":317}],82:[function(require,module,exports){
 (function() {
   var Collection, History, StepModel, _,
     __hasProp = {}.hasOwnProperty,
@@ -10921,7 +10926,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../core/collection":41,"./step":96,"underscore":314}],83:[function(require,module,exports){
+},{"../core/collection":41,"./step":96,"underscore":317}],83:[function(require,module,exports){
 (function() {
   var CoreModel, IMObject, _,
     __hasProp = {}.hasOwnProperty,
@@ -10967,7 +10972,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../core-model":38,"underscore":314}],84:[function(require,module,exports){
+},{"../core-model":38,"underscore":317}],84:[function(require,module,exports){
 (function() {
   var Collection, Join, Joins, PathModel, _,
     __hasProp = {}.hasOwnProperty,
@@ -11058,7 +11063,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../core/collection":41,"./path":93,"underscore":314}],85:[function(require,module,exports){
+},{"../core/collection":41,"./path":93,"underscore":317}],85:[function(require,module,exports){
 (function() {
   var CoreModel, NestedTableModel, _,
     __hasProp = {}.hasOwnProperty,
@@ -11150,7 +11155,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../core-model":38,"underscore":314}],86:[function(require,module,exports){
+},{"../core-model":38,"underscore":317}],86:[function(require,module,exports){
 (function() {
   var CoreModel, NullObject,
     __hasProp = {}.hasOwnProperty,
@@ -11270,7 +11275,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"backbone":269,"underscore":314}],88:[function(require,module,exports){
+},{"backbone":271,"underscore":317}],88:[function(require,module,exports){
 (function() {
   var IMObject, ObjectStore, _;
 
@@ -11330,7 +11335,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"./intermine-object":83,"underscore":314}],89:[function(require,module,exports){
+},{"./intermine-object":83,"underscore":317}],89:[function(require,module,exports){
 (function() {
   var Backbone, OpenNodes, UniqItems, descendsFrom,
     __hasProp = {}.hasOwnProperty,
@@ -11395,7 +11400,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"./uniq-items":99,"backbone":269}],90:[function(require,module,exports){
+},{"./uniq-items":99,"backbone":271}],90:[function(require,module,exports){
 (function() {
   var OrderElementModel, PathModel,
     __hasProp = {}.hasOwnProperty,
@@ -11558,7 +11563,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"./uniq-items":99,"backbone":269}],93:[function(require,module,exports){
+},{"./uniq-items":99,"backbone":271}],93:[function(require,module,exports){
 (function() {
   var BOOLEAN_TYPES, CoreModel, NUMERIC_TYPES, PathModel, _ref,
     __hasProp = {}.hasOwnProperty,
@@ -11647,7 +11652,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../core-model":38,"imjs":293}],94:[function(require,module,exports){
+},{"../core-model":38,"imjs":295}],94:[function(require,module,exports){
 (function() {
   var Collection, CoreModel, RowModel, RowsCollection, _,
     __hasProp = {}.hasOwnProperty,
@@ -11711,7 +11716,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../core-model":38,"../core/collection":41,"underscore":314}],95:[function(require,module,exports){
+},{"../core-model":38,"../core/collection":41,"underscore":317}],95:[function(require,module,exports){
 (function() {
   var Collection, CoreModel, SelectedObjects, SelectionModel, types,
     __hasProp = {}.hasOwnProperty,
@@ -11896,7 +11901,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../core-model":38,"../utils/count-executor":114,"underscore":314}],97:[function(require,module,exports){
+},{"../core-model":38,"../utils/count-executor":114,"underscore":317}],97:[function(require,module,exports){
 (function() {
   var Collection, CoreModel, Options, SummaryHistogram, SummaryItemModel, SummaryItems, SummaryModel, getColumnSummary, inty, _,
     __hasProp = {}.hasOwnProperty,
@@ -12251,7 +12256,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../core-model":38,"../core/collection":41,"../options":100,"../services/column-summary":102,"underscore":314}],98:[function(require,module,exports){
+},{"../core-model":38,"../core/collection":41,"../options":100,"../services/column-summary":102,"underscore":317}],98:[function(require,module,exports){
 (function() {
   var CoreModel, Options, PathSet, TableModel,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -12437,7 +12442,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this);
 
-},{"../core-model":38,"../core/collection":41,"backbone":269,"underscore":314}],100:[function(require,module,exports){
+},{"../core-model":38,"../core/collection":41,"backbone":271,"underscore":317}],100:[function(require,module,exports){
 (function() {
   var NestedModel, Options,
     __hasProp = {}.hasOwnProperty,
@@ -12658,7 +12663,7 @@ function hasOwnProperty(obj, prop) {
 }).call(this);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"backbone":269,"bootstrap":270,"jquery":312,"jquery-ui/draggable":306,"jquery-ui/droppable":307,"jquery-ui/slider":309,"jquery-ui/sortable":310,"typeahead.js":313}],104:[function(require,module,exports){
+},{"backbone":271,"bootstrap":272,"jquery":314,"jquery-ui/draggable":308,"jquery-ui/droppable":309,"jquery-ui/slider":311,"jquery-ui/sortable":312,"typeahead.js":316}],104:[function(require,module,exports){
 var _ = require('underscore');
 
 var TEMPLATES = exports;
@@ -12701,8 +12706,8 @@ exports.select = "<select class=\"<%- data.classes %>\">\n  <% _.each(data.optio
 exports.list_dialogue_expander = "<button class=\"btn btn-default im-expand-dialogue <%= minimised ? 'active' : void 0 %>\">\n  <%- Messages.getText('lists.picker.Collapse') %>\n</button>\n";
 exports.code_gen_body = "<div class=\"row\">\n  <div class=\"col-sm-2\">\n    <% /* requires lang :: string, options :: {Extra :: {}, Langs :: [string]} */ %>\n    <div class=\"btn-group language-selector\">\n      <button type=\"button\"\n              data-toggle=\"dropdown\"\n              aria-expanded=\"false\"\n              class=\"btn btn-default dropdown-toggle\">\n        <span class=\"im-current-lang\">\n          <%- Messages.getText('codegen.Lang', {lang: lang}) %>\n        </span>\n        <span class=\"caret\"></span>\n      </button>\n      <ul class=\"dropdown-menu im-code-gen-langs\" role=\"menu\">\n        <% _.each(options.Langs, function (l) { %>\n            <li data-lang=\"<%- l %>\"\n                class=\"<%= (l === lang) ? 'active' : void 0 %>\">\n              <a href=\"#\"><%- Messages.getText('codegen.Lang', {lang: l}) %></a>\n            </li>\n        <% }); %>\n      </ul>\n    </div>\n    <div class=\"im-show-boilerplate\"></div>\n    <div class=\"im-highlight-syntax\"></div>\n    <div class=\"im-extra-options\"></div>\n  </div>\n  <div class=\"col-sm-10\">\n    <pre class=\"im-generated-code\"><%- generatedCode %></pre>\n  </div>\n</div>\n";
 exports.checkbox = "<label>\n    <input type=\"checkbox\" \n           <%= checked ? 'checked' : void 0 %>\n           >\n    <%- label %>\n</label>\n";
-exports.table_cell = "<% if (state.minimised) { %>\n  &hellip;\n<% } else if (entity.id == null) { %>\n  <% if (value != null && formattedValue != null) { %>\n    <span class=\"im-displayed-value\"><%= value %></span>\n  <% } else if (entity.isNULL) { %>\n    <span class=\"im-null-entity\">\n      <%- Messages.getText('table.cell.NullEntity', {type: entity['class']}) %>\n    </span>\n  <% } else { %>\n    <%= NULL_VALUE %>\n  <% } %>\n<% } else { %>\n  <input\n    class=\"im-list-chooser\"\n    type=\"checkbox\"\n    <% if (input.checked) { %>checked<% } %>\n    <% if (input.disabled) { %>disabled<% } %>\n    style=\"display:<%- input.display %>\">\n\n  <a class=\"im-cell-link\" target=\"<%- target %>\" href=\"<%= url %>\">\n\n    <% if (isForeign) { %>\n      <% if (icon) { %>\n        <img src=\"<%= icon %>\" class=\"im-external-link\"></img>\n      <% } else { %>\n        <%= Icons.icon('ExternalLink') %>\n      <% } %>\n    <% } %>\n\n    <% if (value != null && formattedValue != null) { %>\n      <span class=\"im-displayed-value\"><%= formattedValue %></span>\n    <% } else { %>\n      <%= NULL_VALUE %>\n    <% } %>\n\n  </a>\n\n  <% if (value != null && field === 'url' && rawValue != url) { %>\n    <a class=\"im-cell-link external\" href=\"<%= rawValue %>\">\n      <%= Icons.icon('ExternalLink') %>\n      <%- Messages.getText('table.cell.Link') %>\n    </a>\n  <% } %>\n<% } %>\n";
-exports.export_dialogue_footer = "<% if (linkToFile) { %>\n    <div class=\"pull-left alert alert-info\">\n        <%- Messages.getText('export.cloud.FileLocation', {cloud: dest}) %>\n        <a href=\"<%= linkToFile %>\" target=\"_blank\"><%- linkToFile %></a>\n    </div>\n<% } %>\n\n<button type=\"button\" class=\"btn btn-cancel\">\n    <%- dismissAction %>\n</button>\n\n<% if (dest === 'download') { %>\n    <a class=\"btn btn-primary\"\n        href=\"<%- exportURI %>\">\n        <%= Icons.icon(primaryIcon) %>\n        <%- primaryAction %>\n    </a>\n<% } else { %>\n    <button type=\"button\"\n            <%= (error || doneness != null) ? 'disabled' : void 0 %>\n            class=\"btn btn-primary\">\n        <%= Icons.icon(primaryIcon) %>\n        <%- primaryAction %>\n    </button>\n<% } %>\n\n";
+exports.table_cell = "<% if (state.minimised) { %>\n  &hellip;\n<% } else if (entity.id == null) { %>\n  <% if (value != null && formattedValue != null) { %>\n    <span class=\"im-displayed-value\"><%= value %></span>\n  <% } else if (entity.isNULL) { %>\n    <span class=\"im-null-entity\">\n      <%- Messages.getText('table.cell.NullEntity', {type: entity['class']}) %>\n    </span>\n  <% } else { %>\n    <%= NULL_VALUE %>\n  <% } %>\n<% } else { %>\n  <input\n    class=\"im-list-chooser\"\n    type=\"checkbox\"\n    <% if (input.checked) { %>checked<% } %>\n    <% if (input.disabled) { %>disabled<% } %>\n    style=\"display:<%- input.display %>\">\n\n  <a class=\"im-cell-link\" target=\"<%- target %>\" href=\"<%= url %>\">\n\n    <% if (isForeign) { %>\n      <% if (icon) { %>\n        <img src=\"<%= icon %>\" class=\"im-external-link\"></img>\n      <% } else { %>\n        <%= Icons.icon('ExternalLink') %>\n      <% } %>\n    <% } %>\n\n    <% if (value != null && formattedValue != null) { %>\n      <span class=\"im-displayed-value\"><%= formattedValue %></span>\n    <% } else { %>\n      <%= NULL_VALUE %>\n    <% } %>\n\n  </a>\n\n<% } %>\n";
+exports.export_dialogue_footer = "<% if (linkToFile) { %>\n    <div class=\"pull-left alert alert-info\">\n        <%- Messages.getText('export.cloud.FileLocation', {cloud: dest}) %>\n        <a href=\"<%= linkToFile %>\" target=\"_blank\"><%- linkToFile %></a>\n    </div>\n<% } %>\n\n<button type=\"button\" class=\"btn btn-cancel\">\n    <%- dismissAction %>\n</button>\n\n<% if (dest === 'downloads') { %>\n    <a class=\"btn btn-primary\"\n        href=\"<%- exportURI %>\">\n        <%= Icons.icon(primaryIcon) %>\n        <%- primaryAction %>\n    </a>\n<% } else { %>\n    <button type=\"button\"\n            <%= (error || doneness != null) ? 'disabled' : void 0 %>\n            class=\"btn btn-primary\">\n        <%= Icons.icon(primaryIcon) %>\n        <%- primaryAction %>\n    </button>\n<% } %>\n";
 exports.formatted_sorting = "<a> <% /* requires Icons, direction and name */ %>\n    <%= Icons.icon(direction || 'unsorted') %>\n    <span class=\"im-sort-path\"><%- name %></span>\n</a>\n";
 exports.modal_footer = "<button type=\"button\" class=\"btn btn-cancel\">\n    <%- dismissAction %>\n</button>\n<% if (exportLink != null) { %>\n    <a class=\"btn btn-primary\"\n        <%= (error) ? 'disabled' : void 0 %>\n        href=\"<%- exportLink %>\">\n        <%= Icons.icon(primaryIcon) %>\n        <%- primaryAction %>\n    </a>\n<% } else { %>\n    <% /* We need the wrapper to deal with the fact that tooltips do not\n        * work on disabled buttons. */ %>\n    <div class=\"im-tooltip-wrapper\"\n        <% if (disabled && disabledReason) { %>\n          title=\"<%- Messages.getText(disabledReason)  %>\"\n        <% } %>>\n        <button type=\"button\"\n                <%= (error || disabled) ? 'disabled' : void 0 %>\n                class=\"btn btn-primary\">\n            <%= Icons.icon(primaryIcon) %>\n            <%- primaryAction %>\n        </button>\n    </div>\n<% } %>\n";
 exports.column_manager_position_controls = "<div class=\"im-position-controls\">\n    <% if (index > 0) { %>\n        <%= Icons.iconWithProps('ASC', {\n            className: 'im-move-up',\n            title: Messages.getText('columns.MoveUp')\n        }) %>\n    <% } %>\n    <% if (!isLast) { %>\n        <%= Icons.iconWithProps('DESC', {\n            className: 'im-move-down',\n            title: Messages.getText('columns.MoveDown')\n        }) %>\n    <% } %>\n</div>\n\n";
@@ -12792,7 +12797,7 @@ exports.attribute_value_controls = "<div>\n    <input class=\"form-control im-co
 exports.table_error = "<div class=\"alert alert-error alert-warning\">\n\n  <h2><%= Icons.icon('Bug') %><%- Messages.getText('error.Oops') %></h2>\n\n  <p>\n    <i><%- Messages.getText(error.key || 'error.' + domain + '.Heading') %></i>\n  </p>\n\n  <p><%- Messages.getText('error.' + domain + '.Body') %></p>\n\n  <a class=\"btn btn-primary pull-right\" href=\"mailto:<%= mailto %>\">\n    <%= Icons.icon('Mail') %>\n    <%- Messages.getText('error.EmailHelp') %>\n  </a>\n\n  <button class=\"btn btn-default im-show-query\">\n    <%= Icons.icon('xml') %>\n    <%- Messages.getText('error.ShowQuery') %>\n  </button>\n  <% if (error.message) { %>\n    <button class=\"btn btn-default im-show-error\">\n      <%= Icons.icon('Bug') %>\n      <%- Messages.getText('error.ShowError') %>\n    </button>\n  <% } %>\n\n  <pre class=\"query-xml well im-latent\"><%- indent(query) %></pre>\n\n  <% if (error.message) { %>\n    <pre class=\"error-message well im-latent\"><%- error.message %></pre>\n  <% } %>\n\n</div>\n";
 exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role=\"menu\" class=\"im-export-summary\">\n    <% _.each(formats, function (icon, param) { %>\n      <li role=\"presentation\">\n        <a role=\"menuitem\"\n            href=\"<%= query.getExportURI(param) %>&summaryPath=<%= path %>\">\n            <%= Icons.icon(icon) %>\n            <%- icon.toUpperCase() %>\n        </a>\n      </li>\n    <% }); %>\n</ul>\n";
 
-},{"underscore":314}],105:[function(require,module,exports){
+},{"underscore":317}],105:[function(require,module,exports){
 (function() {
   var Options, fs, pluralize, select_html, select_templ, _;
 
@@ -12894,7 +12899,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"../options":100,"pluralize":316,"underscore":314}],106:[function(require,module,exports){
+},{"../options":100,"pluralize":315,"underscore":317}],106:[function(require,module,exports){
 (function() {
   module.exports = {
     interpolate: /\{\{\{ (.+?) \}\}\}/g,
@@ -12951,7 +12956,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"../options":100,"es6-promise":284}],108:[function(require,module,exports){
+},{"../options":100,"es6-promise":286}],108:[function(require,module,exports){
 (function() {
   var Formatting, createColumns, getReplacedTest, index, isKeyField, notBanned, returnIfOK,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -13058,7 +13063,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"../formatting":50,"./create-columns":115,"./get-replaced-test":122,"./is-key-field":126}],109:[function(require,module,exports){
+},{"../formatting":50,"./create-columns":115,"./get-replaced-test":123,"./is-key-field":127}],109:[function(require,module,exports){
 (function() {
   module.exports = function(cells, headers) {
     var added, c, col, hi, n, p, parent, rp, skipped, _i, _j, _len, _len1, _ref, _ref1;
@@ -13277,7 +13282,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"../models/cell":74,"../models/fast-path-object":80,"../models/nested-table":85,"../models/null-object":86,"../models/object-store":88,"underscore":314}],113:[function(require,module,exports){
+},{"../models/cell":74,"../models/fast-path-object":80,"../models/nested-table":85,"../models/null-object":86,"../models/object-store":88,"underscore":317}],113:[function(require,module,exports){
 (function() {
   var _;
 
@@ -13295,7 +13300,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"underscore":314}],114:[function(require,module,exports){
+},{"underscore":317}],114:[function(require,module,exports){
 (function() {
   var CACHE, key;
 
@@ -13367,7 +13372,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"./calculate-row-template":110,"./longest-common-prefix":128}],116:[function(require,module,exports){
+},{"./calculate-row-template":110,"./longest-common-prefix":129}],116:[function(require,module,exports){
 (function() {
   var ClassSet, _;
 
@@ -13399,7 +13404,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"underscore":314}],117:[function(require,module,exports){
+},{"underscore":317}],117:[function(require,module,exports){
 (function() {
   var getMissingData, hasData, thenSet;
 
@@ -13427,7 +13432,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"./fetch-missing-data":119,"./has-fields":124}],118:[function(require,module,exports){
+},{"./fetch-missing-data":120,"./has-fields":125}],118:[function(require,module,exports){
 (function() {
   var Backbone, _;
 
@@ -13461,7 +13466,33 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"backbone":269,"underscore":314}],119:[function(require,module,exports){
+},{"backbone":271,"underscore":317}],119:[function(require,module,exports){
+(function() {
+  var openWindowWithPost;
+
+  module.exports = openWindowWithPost = function(uri, name, params) {
+    var body, form, input, key;
+    form = document.createElement("form");
+    form.method = "POST";
+    form.style.display = "none";
+    form.action = uri;
+    form.target = name + new Date().getTime();
+    for (key in params) {
+      input = document.createElement("input");
+      input.type = "hidden";
+      input.name = key;
+      input.value = params[key];
+      form.appendChild(input);
+    }
+    body = document.querySelector("body");
+    body.appendChild(form);
+    form.submit();
+    body.removeChild(form);
+  };
+
+}).call(this);
+
+},{}],120:[function(require,module,exports){
 (function() {
   var buildProps, refs, refsIn, _;
 
@@ -13524,7 +13555,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"underscore":314}],120:[function(require,module,exports){
+},{"underscore":317}],121:[function(require,module,exports){
 (function() {
   var getLeaves,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -13571,7 +13602,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{}],121:[function(require,module,exports){
+},{}],122:[function(require,module,exports){
 (function() {
   var EQL, Promise, getOrganisms, hasAnOrganism, nameOrShortName, organisable, uniquelyFlat, wild, _,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -13662,7 +13693,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"es6-promise":284,"underscore":314}],122:[function(require,module,exports){
+},{"es6-promise":286,"underscore":317}],123:[function(require,module,exports){
 (function() {
   var getReplacedTest, isIDPath, shouldFormat;
 
@@ -13694,7 +13725,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"../formatting":50}],123:[function(require,module,exports){
+},{"../formatting":50}],124:[function(require,module,exports){
 (function() {
   var Promise, getResultClass;
 
@@ -13719,7 +13750,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"es6-promise":284}],124:[function(require,module,exports){
+},{"es6-promise":286}],125:[function(require,module,exports){
 (function() {
   module.exports = function(fields) {
     if (fields == null) {
@@ -13734,7 +13765,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{}],125:[function(require,module,exports){
+},{}],126:[function(require,module,exports){
 (function() {
   var indent;
 
@@ -13767,7 +13798,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{}],126:[function(require,module,exports){
+},{}],127:[function(require,module,exports){
 (function() {
   var isKeyField,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -13787,7 +13818,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{}],127:[function(require,module,exports){
+},{}],128:[function(require,module,exports){
 (function (global){
 (function() {
   var $, Options, Promise;
@@ -13815,7 +13846,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 }).call(this);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../options":100,"es6-promise":284,"jquery":312}],128:[function(require,module,exports){
+},{"../options":100,"es6-promise":286,"jquery":314}],129:[function(require,module,exports){
 (function() {
   var longestCommonPrefix, prefixesAll, _,
     __slice = [].slice;
@@ -13853,7 +13884,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"underscore":314}],129:[function(require,module,exports){
+},{"underscore":317}],130:[function(require,module,exports){
 (function() {
   exports.href = function(address, subject, body) {
     var pairs, params;
@@ -13868,7 +13899,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{}],130:[function(require,module,exports){
+},{}],131:[function(require,module,exports){
 (function() {
   var onChange;
 
@@ -13880,7 +13911,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{}],131:[function(require,module,exports){
+},{}],132:[function(require,module,exports){
 (function() {
   var openWindowWithPost;
 
@@ -13908,7 +13939,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{}],132:[function(require,module,exports){
+},{}],133:[function(require,module,exports){
 (function() {
   var pairsToParams, _;
 
@@ -13940,7 +13971,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"underscore":314}],133:[function(require,module,exports){
+},{"underscore":317}],134:[function(require,module,exports){
 (function() {
   var contains_i, _;
 
@@ -13986,7 +14017,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"underscore":314}],134:[function(require,module,exports){
+},{"underscore":317}],135:[function(require,module,exports){
 (function() {
   var CACHE, Promise, getPathSuggestions, matchPathsToNames, _;
 
@@ -14046,7 +14077,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"es6-promise":284,"underscore":314}],135:[function(require,module,exports){
+},{"es6-promise":286,"underscore":317}],136:[function(require,module,exports){
 (function() {
   var PopoverFactory, PreviewCachingService;
 
@@ -14113,7 +14144,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{}],136:[function(require,module,exports){
+},{}],137:[function(require,module,exports){
 (function() {
   exports.fromPairs = function(pairs) {
     var p;
@@ -14130,7 +14161,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{}],137:[function(require,module,exports){
+},{}],138:[function(require,module,exports){
 (function() {
   var $, Options, Promise, loadDropbox, loadResource;
 
@@ -14168,7 +14199,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"../options":100,"./load-resource":127,"es6-promise":284,"jquery":312}],138:[function(require,module,exports){
+},{"../options":100,"./load-resource":128,"es6-promise":286,"jquery":314}],139:[function(require,module,exports){
 (function() {
   var Messages, Options, Promise, getBranding, getOrganisms, getParameters, getResultClass, openWindowWithPost, parseUrl, send, _;
 
@@ -14265,7 +14296,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"../messages":53,"../options":100,"./branding":107,"./get-organisms":121,"./get-result-class":123,"./open-window-with-post":131,"./parse-url":132,"es6-promise":284,"underscore":314}],139:[function(require,module,exports){
+},{"../messages":53,"../options":100,"./branding":107,"./get-organisms":122,"./get-result-class":124,"./open-window-with-post":132,"./parse-url":133,"es6-promise":286,"underscore":317}],140:[function(require,module,exports){
 (function() {
   var Options, Promise, fromPairs, getGenomeSpaceUrl, save, _;
 
@@ -14307,7 +14338,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"../options":100,"./query-string":136,"es6-promise":284,"underscore":314}],140:[function(require,module,exports){
+},{"../options":100,"./query-string":137,"es6-promise":286,"underscore":317}],141:[function(require,module,exports){
 (function() {
   var $, BOUNDARY, CLOSE_DELIM, DELIMITER, DRIVE_METHOD, DRIVE_PATH, ERR, FILE_CT, GoogleExporter, LIB, METADATA_CT, MetaData, Options, Promise, REQ_CT, REQ_PARAMS, SCOPE, VERSION, loadResource, sendToGoogleDrive, withExporter, _, __GOOGLE;
 
@@ -14486,7 +14517,32 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"../options":100,"./load-resource":127,"es6-promise":284,"jquery":312,"underscore":314}],141:[function(require,module,exports){
+},{"../options":100,"./load-resource":128,"es6-promise":286,"jquery":314,"underscore":317}],142:[function(require,module,exports){
+(function() {
+  var Promise, existingWindowWithPost, send, _;
+
+  _ = require('underscore');
+
+  Promise = require('es6-promise').Promise;
+
+  existingWindowWithPost = require('./existing-window-with-post');
+
+  module.exports = send = function(url, filename, onProgress, exportModel) {
+    var endpoint, format, parameters, _ref;
+    endpoint = 'query/results';
+    format = this.model.format;
+    if ((_ref = format.needs) != null ? _ref.length : void 0) {
+      endpoint += "/" + format.id;
+    }
+    parameters = exportModel.getExportParameters();
+    parameters.token = this.query.service.token;
+    existingWindowWithPost(this.query.service.root + endpoint, null, parameters);
+    return Promise.resolve(null);
+  };
+
+}).call(this);
+
+},{"./existing-window-with-post":119,"es6-promise":286,"underscore":317}],143:[function(require,module,exports){
 (function() {
   var callable, compose, escape, getData, _ref,
     __slice = [].slice;
@@ -14514,7 +14570,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"./ensure-required-data":117,"underscore":314}],142:[function(require,module,exports){
+},{"./ensure-required-data":117,"underscore":317}],144:[function(require,module,exports){
 (function() {
   var NEXT_DIRECTION_OF, sortQueryByPath;
 
@@ -14538,7 +14594,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{}],143:[function(require,module,exports){
+},{}],145:[function(require,module,exports){
 (function() {
   var stripExtraneousWhiteSpace;
 
@@ -14552,7 +14608,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{}],144:[function(require,module,exports){
+},{}],146:[function(require,module,exports){
 (function() {
   var Icons, Messages, Options, SuggestionSource, fs, html, mustacheSettings, template, _,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -14636,7 +14692,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"../icons":51,"../messages":53,"../options":100,"../templates/mustache-settings":106,"underscore":314}],145:[function(require,module,exports){
+},{"../icons":51,"../messages":53,"../options":100,"../templates/mustache-settings":106,"underscore":317}],147:[function(require,module,exports){
 (function() {
   var ALREADY_DONE, CACHES, Options, Page, Promise, ResultCache,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -14820,7 +14876,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{"../models/page":91,"../options":100,"es6-promise":284}],146:[function(require,module,exports){
+},{"../models/page":91,"../options":100,"es6-promise":286}],148:[function(require,module,exports){
 (function() {
   var toNamedPath;
 
@@ -14835,7 +14891,7 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 
 }).call(this);
 
-},{}],147:[function(require,module,exports){
+},{}],149:[function(require,module,exports){
 (function (global){
 (function() {
   var CDN, PROMISES, Promise, promiseResource, withResource,
@@ -14864,10 +14920,10 @@ exports.download_popover = "<% /* requires: formats, query, path */ %>\n<ul role
 }).call(this);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../cdn":37,"es6-promise":284}],148:[function(require,module,exports){
-module.exports = '2.0.0-beta-42';
+},{"../cdn":37,"es6-promise":286}],150:[function(require,module,exports){
+module.exports = '2.0.0';
 
-},{}],149:[function(require,module,exports){
+},{}],151:[function(require,module,exports){
 (function() {
   var $, ActiveConstraint, ConstraintEditor, ConstraintModel, ConstraintSummary, CoreModel, Icons, Messages, Model, Options, Promise, Query, Templates, View, aeql, basicEql, _, _ref,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
@@ -15247,7 +15303,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-model":38,"../core-view":39,"../icons":51,"../messages":53,"../options":100,"../templates":104,"./constraint-editor":166,"./constraint-summary":167,"es6-promise":284,"imjs":293,"jquery":312,"underscore":314}],150:[function(require,module,exports){
+},{"../core-model":38,"../core-view":39,"../icons":51,"../messages":53,"../options":100,"../templates":104,"./constraint-editor":168,"./constraint-summary":169,"es6-promise":286,"imjs":295,"jquery":314,"underscore":317}],152:[function(require,module,exports){
 (function() {
   var $, AttributeValueControls, CoreView, HasTypeaheads, INTEGRAL_TYPES, IS_BLANK, Messages, NUMERIC_TYPES, NestedModel, Options, Promise, Query, SuggestionSource, Templates, getBranding, numToString, numify, selectTemplate, trim, _, _ref, _ref1,
     __hasProp = {}.hasOwnProperty,
@@ -15644,7 +15700,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../core/nested-model":44,"../messages":53,"../mixins/has-typeaheads":69,"../options":100,"../patterns":101,"../templates":104,"../templates/helpers":105,"../utils/branding":107,"../utils/suggestion-source":144,"es6-promise":284,"imjs":293,"jquery":312,"underscore":314}],151:[function(require,module,exports){
+},{"../core-view":39,"../core/nested-model":44,"../messages":53,"../mixins/has-typeaheads":69,"../options":100,"../patterns":101,"../templates":104,"../templates/helpers":105,"../utils/branding":107,"../utils/suggestion-source":146,"es6-promise":286,"imjs":295,"jquery":314,"underscore":317}],153:[function(require,module,exports){
 (function() {
   var BooleanValueControls, Messages, Options, View, fs, html, mustacheSettings, _,
     __hasProp = {}.hasOwnProperty,
@@ -15712,7 +15768,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../messages":53,"../options":100,"../templates/mustache-settings":106,"underscore":314}],152:[function(require,module,exports){
+},{"../core-view":39,"../messages":53,"../options":100,"../templates/mustache-settings":106,"underscore":317}],154:[function(require,module,exports){
 (function() {
   var CodeGenButton, CodeGenModel, CoreView, Dialogue, MainButton, Messages, Options, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -15812,7 +15868,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../messages":53,"../messages/code-gen":55,"../models/code-gen":75,"../options":100,"../templates":104,"./code-gen-dialogue":153,"underscore":314}],153:[function(require,module,exports){
+},{"../core-view":39,"../messages":53,"../messages/code-gen":55,"../models/code-gen":75,"../options":100,"../templates":104,"./code-gen-dialogue":155,"underscore":317}],155:[function(require,module,exports){
 (function (global){
 (function() {
   var CANNOT_SAVE, C_STYLE_COMMENTS, Checkbox, CodeGenDialogue, CodeGenModel, HTML_MIMETYPE, JS_MIMETYPE, MIMETYPES, Messages, Modal, OCTOTHORPE_COMMENTS, Options, Promise, Templates, XML_MIMETYPE, alreadyRejected, canSaveFromMemory, indentXml, stripEmptyValues, stripExtraneousWhiteSpace, withFileSaver, withPrettyPrintOne, withResource, _,
@@ -16208,7 +16264,7 @@ module.exports = '2.0.0-beta-42';
 }).call(this);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../core/checkbox":40,"../messages":53,"../messages/code-gen":55,"../models/code-gen":75,"../options":100,"../templates":104,"../utils/indent-xml":125,"../utils/strip-extra-whitespace":143,"../utils/with-cdn-resource":147,"./modal":234,"es6-promise":284,"underscore":314}],154:[function(require,module,exports){
+},{"../core/checkbox":40,"../messages":53,"../messages/code-gen":55,"../models/code-gen":75,"../options":100,"../templates":104,"../utils/indent-xml":126,"../utils/strip-extra-whitespace":145,"../utils/with-cdn-resource":149,"./modal":236,"es6-promise":286,"underscore":317}],156:[function(require,module,exports){
 (function() {
   var AvailableColumns, Collection, ColumnManager, ColumnManagerTabs, IndexedCollection, Messages, Modal, OrderByList, OrderByModel, PathModel, SelectList, SelectListEditor, SortOrderEditor, Templates, _,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -16505,7 +16561,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core/collection":41,"../messages":53,"../messages/columns":56,"../models/available-columns":73,"../models/order-element":90,"../models/path":93,"../templates":104,"./column-manager/select-list":159,"./column-manager/sort-order":161,"./column-manager/tabs":162,"./modal":234,"underscore":314}],155:[function(require,module,exports){
+},{"../core/collection":41,"../messages":53,"../messages/columns":56,"../models/available-columns":73,"../models/order-element":90,"../models/path":93,"../templates":104,"./column-manager/select-list":161,"./column-manager/sort-order":163,"./column-manager/tabs":164,"./modal":236,"underscore":317}],157:[function(require,module,exports){
 (function() {
   var AvailablePath, CUTOFF, UnselectedColumn, _,
     __hasProp = {}.hasOwnProperty,
@@ -16585,7 +16641,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"./unselected-column":163,"underscore":314}],156:[function(require,module,exports){
+},{"./unselected-column":165,"underscore":317}],158:[function(require,module,exports){
 (function() {
   var ColumnManger, ColumnMangerButton, QueryDialogueButton,
     __hasProp = {}.hasOwnProperty,
@@ -16620,7 +16676,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../messages/columns":56,"../column-manager":154,"../query-dialogue-button":243}],157:[function(require,module,exports){
+},{"../../messages/columns":56,"../column-manager":156,"../query-dialogue-button":245}],159:[function(require,module,exports){
 (function() {
   var OrderElement, SelectedColumn, TEMPLATE_PARTS, Templates, nextDirection, _,
     __hasProp = {}.hasOwnProperty,
@@ -16675,7 +16731,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../templates":104,"./selected-column":160,"underscore":314}],158:[function(require,module,exports){
+},{"../../templates":104,"./selected-column":162,"underscore":317}],160:[function(require,module,exports){
 (function() {
   var Buttons, ColumnChooser, CoreView, OpenNodes, Options, PathChooser, PathSet, Templates,
     __hasProp = {}.hasOwnProperty,
@@ -16834,7 +16890,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../models/open-nodes":89,"../../models/path-set":92,"../../options":100,"../../templates":104,"../path-chooser":238}],159:[function(require,module,exports){
+},{"../../core-view":39,"../../models/open-nodes":89,"../../models/path-set":92,"../../options":100,"../../templates":104,"../path-chooser":240}],161:[function(require,module,exports){
 (function() {
   var Collection, ColumnChooser, CoreView, HandlesDOMReSort, SelectListEditor, SelectedColumn, Templates, UnselectedColumn, binnedId, childId, incr, _,
     __hasProp = {}.hasOwnProperty,
@@ -17122,7 +17178,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../core/collection":41,"../../mixins/handles-dom-resort":68,"../../templates":104,"./path-chooser":158,"./selected-column":160,"./unselected-column":163,"underscore":314}],160:[function(require,module,exports){
+},{"../../core-view":39,"../../core/collection":41,"../../mixins/handles-dom-resort":68,"../../templates":104,"./path-chooser":160,"./selected-column":162,"./unselected-column":165,"underscore":317}],162:[function(require,module,exports){
 (function() {
   var Collection, CoreView, PathModel, SelectedColumn, TEMPLATE_PARTS, Templates, decr, ignore, incr, _,
     __hasProp = {}.hasOwnProperty,
@@ -17273,7 +17329,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../core/collection":41,"../../models/path":93,"../../templates":104,"../../utils/events":118,"underscore":314}],161:[function(require,module,exports){
+},{"../../core-view":39,"../../core/collection":41,"../../models/path":93,"../../templates":104,"../../utils/events":118,"underscore":317}],163:[function(require,module,exports){
 (function (global){
 (function() {
   var AvailablePath, CoreModel, CoreView, HandlesDOMReSort, OrderElement, SortOrderEditor, Templates, activeId, inactiveId, _,
@@ -17517,7 +17573,7 @@ module.exports = '2.0.0-beta-42';
 }).call(this);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../../core-model":38,"../../core-view":39,"../../mixins/handles-dom-resort":68,"../../templates":104,"./available-path":155,"./order-element":157,"underscore":314}],162:[function(require,module,exports){
+},{"../../core-model":38,"../../core-view":39,"../../mixins/handles-dom-resort":68,"../../templates":104,"./available-path":157,"./order-element":159,"underscore":317}],164:[function(require,module,exports){
 (function() {
   var ClassSet, ColumnManagerTabs, CoreView, Templates, tabClassSet, _,
     __hasProp = {}.hasOwnProperty,
@@ -17619,7 +17675,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../templates":104,"../../utils/css-class-set":116,"underscore":314}],163:[function(require,module,exports){
+},{"../../core-view":39,"../../templates":104,"../../utils/css-class-set":116,"underscore":317}],165:[function(require,module,exports){
 (function() {
   var SelectedColumn, TEMPLATE_PARTS, Templates, UnselectedColumn, _,
     __hasProp = {}.hasOwnProperty,
@@ -17663,7 +17719,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../templates":104,"./selected-column":160,"underscore":314}],164:[function(require,module,exports){
+},{"../../templates":104,"./selected-column":162,"underscore":317}],166:[function(require,module,exports){
 (function() {
   var ConstraintAdderOptions, HasTypeaheads, IS_BLANK, Options, Promise, Templates, View, getPathSuggestions, pathSuggester, shortenLongName, _,
     __slice = [].slice,
@@ -17898,7 +17954,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../mixins/has-typeaheads":69,"../options":100,"../patterns":101,"../templates":104,"../utils/path-suggester":133,"../utils/path-suggestions":134,"es6-promise":284,"underscore":314}],165:[function(require,module,exports){
+},{"../core-view":39,"../mixins/has-typeaheads":69,"../options":100,"../patterns":101,"../templates":104,"../utils/path-suggester":134,"../utils/path-suggestions":135,"es6-promise":286,"underscore":317}],167:[function(require,module,exports){
 (function() {
   var ConstraintAdder, ConstraintAdderModel, ConstraintAdderOptions, CoreModel, Messages, NewConstraint, OPTIONS_SEL, OpenNodes, PathChooser, PathSet, Templates, View, _,
     __hasProp = {}.hasOwnProperty,
@@ -18111,7 +18167,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-model":38,"../core-view":39,"../messages":53,"../models/open-nodes":89,"../models/path-set":92,"../templates":104,"./constraint-adder-options":164,"./new-constraint":236,"./path-chooser":238,"underscore":314}],166:[function(require,module,exports){
+},{"../core-model":38,"../core-view":39,"../messages":53,"../models/open-nodes":89,"../models/path-set":92,"../templates":104,"./constraint-adder-options":166,"./new-constraint":238,"./path-chooser":240,"underscore":317}],168:[function(require,module,exports){
 (function() {
   var ATTRIBUTE_OPS, ATTRIBUTE_VALUE_OPS, AttributeValueControls, BASIC_OPS, BOOLEAN_TYPES, BooleanValueControls, ConstraintEditor, CoreView, ErrorMessage, Icons, LIST_OPS, ListValueControls, LookupValueControls, LoopValueControls, MULTIVALUE_OPS, Messages, Model, MultiValueControls, NO_OP, NULL_OPS, NUMERIC_TYPES, Query, REFERENCE_OPS, TEMPLATE, TypeValueControls, fs, html, operatorsFor, _, _ref,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
@@ -18461,7 +18517,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../icons":51,"../messages":53,"./attribute-value-controls":150,"./boolean-value-controls":151,"./error-message":174,"./list-value-controls":230,"./lookup-value-controls":231,"./loop-value-controls":232,"./multi-value-controls":235,"./type-value-controls":265,"imjs":293,"underscore":314}],167:[function(require,module,exports){
+},{"../core-view":39,"../icons":51,"../messages":53,"./attribute-value-controls":152,"./boolean-value-controls":153,"./error-message":176,"./list-value-controls":232,"./lookup-value-controls":233,"./loop-value-controls":234,"./multi-value-controls":237,"./type-value-controls":267,"imjs":295,"underscore":317}],169:[function(require,module,exports){
 (function() {
   var ConstraintSummary, CoreView, IS_BLANK, Messages, Model, Query, Templates, _, _ref,
     __hasProp = {}.hasOwnProperty,
@@ -18618,7 +18674,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../messages":53,"../patterns":101,"../templates":104,"imjs":293,"underscore":314}],168:[function(require,module,exports){
+},{"../core-view":39,"../messages":53,"../patterns":101,"../templates":104,"imjs":295,"underscore":317}],170:[function(require,module,exports){
 (function() {
   var ActiveConstraint, ConstraintAdder, Constraints, CoreView, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -18697,7 +18753,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../messages/constraints":58,"../templates":104,"./active-constraint":149,"./constraint-adder":165,"underscore":314}],169:[function(require,module,exports){
+},{"../core-view":39,"../messages/constraints":58,"../templates":104,"./active-constraint":151,"./constraint-adder":167,"underscore":317}],171:[function(require,module,exports){
 (function() {
   var AdderButton, CoreView, Messages, PathModel, _,
     __hasProp = {}.hasOwnProperty,
@@ -18760,7 +18816,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages":53,"../../messages/constraints":58,"../../models/path":93,"underscore":314}],170:[function(require,module,exports){
+},{"../../core-view":39,"../../messages":53,"../../messages/constraints":58,"../../models/path":93,"underscore":317}],172:[function(require,module,exports){
 (function() {
   var AdderButton, ComposedColumnConstraintAdder, ConstraintAdder, CoreView, DropdownButtonGrp, Messages, OPTS_SEL, Option, PathModel, Templates, Toggle, _,
     __hasProp = {}.hasOwnProperty,
@@ -18937,7 +18993,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages":53,"../../messages/constraints":58,"../../models/path":93,"../../templates":104,"../constraint-adder":165,"./column-adder-button":169,"underscore":314}],171:[function(require,module,exports){
+},{"../../core-view":39,"../../messages":53,"../../messages/constraints":58,"../../models/path":93,"../../templates":104,"../constraint-adder":167,"./column-adder-button":171,"underscore":317}],173:[function(require,module,exports){
 (function() {
   var AdderButton, ConstraintAdder, CoreView, Messages, OPTS_SEL, PathModel, SingleColumnConstraintAdder, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -19011,7 +19067,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages":53,"../../messages/constraints":58,"../../models/path":93,"../../templates":104,"../constraint-adder":165,"./column-adder-button":169,"underscore":314}],172:[function(require,module,exports){
+},{"../../core-view":39,"../../messages":53,"../../messages/constraints":58,"../../models/path":93,"../../templates":104,"../constraint-adder":167,"./column-adder-button":171,"underscore":317}],174:[function(require,module,exports){
 (function() {
   var ComposedColumnConstraintAdder, Constraints, SingleColumnConstraintAdder, SingleColumnConstraints,
     __hasProp = {}.hasOwnProperty,
@@ -19080,7 +19136,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../constraints":168,"./composed-column-adder":170,"./single-column-adder":171}],173:[function(require,module,exports){
+},{"../constraints":170,"./composed-column-adder":172,"./single-column-adder":173}],175:[function(require,module,exports){
 (function() {
   var Bus, CC_NOT_FOUND, Children, CoreView, Dashboard, ERR, History, QueryTools, SelectedObjects, Table, TableModel, Types, _,
     __hasProp = {}.hasOwnProperty,
@@ -19177,7 +19233,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../core/type-assertions":46,"../models/history":82,"../models/selected-objects":95,"../models/table":98,"../utils/children":113,"../utils/events":118,"./query-tools":245,"./table":246,"underscore":314}],174:[function(require,module,exports){
+},{"../core-view":39,"../core/type-assertions":46,"../models/history":82,"../models/selected-objects":95,"../models/table":98,"../utils/children":113,"../utils/events":118,"./query-tools":247,"./table":248,"underscore":317}],176:[function(require,module,exports){
 (function() {
   var CoreView, ErrorMessage, Icons, Templates, fs, _,
     __hasProp = {}.hasOwnProperty,
@@ -19230,9 +19286,9 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../icons":51,"../templates":104,"fs":2,"underscore":314}],175:[function(require,module,exports){
+},{"../core-view":39,"../icons":51,"../templates":104,"fs":2,"underscore":317}],177:[function(require,module,exports){
 (function() {
-  var $, ColumnControls, CompressionControls, ConstraintAdder, DestinationOptions, ExportDialogue, ExportModel, FOOTER, FastaOptions, FlatFileOptions, FormatControls, Formats, INITIAL_STATE, JSONOptions, Menu, Messages, Modal, Model, Options, Preview, RowControls, RunsQuery, Templates, UndismissableError, isa, openWindowWithPost, sendToDropBox, sendToGalaxy, sendToGenomeSpace, sendToGoogleDrive, _,
+  var $, ColumnControls, CompressionControls, ConstraintAdder, DestinationOptions, ExportDialogue, ExportModel, FOOTER, FastaOptions, FlatFileOptions, FormatControls, Formats, INITIAL_STATE, JSONOptions, Menu, Messages, Modal, Model, Options, Preview, RowControls, RunsQuery, Templates, UndismissableError, isa, openWindowWithPost, sendToDropBox, sendToGalaxy, sendToGenomeSpace, sendToGoogleDrive, sendToLocal, _,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -19286,6 +19342,8 @@ module.exports = '2.0.0-beta-42';
   sendToGalaxy = require('../utils/send-to-galaxy');
 
   sendToGenomeSpace = require('../utils/send-to-genomespace');
+
+  sendToLocal = require('../utils/send-to-local');
 
   INITIAL_STATE = {
     doneness: null,
@@ -19574,7 +19632,7 @@ module.exports = '2.0.0-beta-42';
       uri = this.getExportURI();
       file = this.getFileName();
       onProgress = this.onUploadProgress;
-      exporting = exporter.call(ctx, uri, file, onProgress);
+      exporting = exporter.call(ctx, uri, file, onProgress, this);
       exporting.then(this.onUploadComplete, this.onUploadError);
       if (exporter.after != null) {
         postExport = exporter.after.bind(ctx);
@@ -19591,9 +19649,7 @@ module.exports = '2.0.0-beta-42';
     ExportDialogue.prototype.getExporter = function() {
       switch (this.state.get('dest')) {
         case 'download':
-          return function() {
-            return Promise.resolve(null);
-          };
+          return sendToLocal;
         case 'Dropbox':
           return sendToDropBox;
         case 'Drive':
@@ -19652,7 +19708,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-model":38,"../messages":53,"../mixins/runs-query":70,"../models/export-formats":79,"../options":100,"../templates":104,"../utils/open-window-with-post":131,"../utils/send-to-dropbox":137,"../utils/send-to-galaxy":138,"../utils/send-to-genomespace":139,"../utils/send-to-google-drive":140,"./constraint-adder":165,"./export-dialogue/column-controls":177,"./export-dialogue/compression-controls":178,"./export-dialogue/destination-options":179,"./export-dialogue/fasta-options":180,"./export-dialogue/flat-file-options":181,"./export-dialogue/format-controls":182,"./export-dialogue/json-options":183,"./export-dialogue/preview":185,"./export-dialogue/row-controls":186,"./export-dialogue/tab-menu":187,"./modal":234,"jquery":312,"underscore":314}],176:[function(require,module,exports){
+},{"../core-model":38,"../messages":53,"../mixins/runs-query":70,"../models/export-formats":79,"../options":100,"../templates":104,"../utils/open-window-with-post":132,"../utils/send-to-dropbox":138,"../utils/send-to-galaxy":139,"../utils/send-to-genomespace":140,"../utils/send-to-google-drive":141,"../utils/send-to-local":142,"./constraint-adder":167,"./export-dialogue/column-controls":179,"./export-dialogue/compression-controls":180,"./export-dialogue/destination-options":181,"./export-dialogue/fasta-options":182,"./export-dialogue/flat-file-options":183,"./export-dialogue/format-controls":184,"./export-dialogue/json-options":185,"./export-dialogue/preview":187,"./export-dialogue/row-controls":188,"./export-dialogue/tab-menu":189,"./modal":236,"jquery":314,"underscore":317}],178:[function(require,module,exports){
 (function() {
   var Counter, ExportDialogue, ExportDialogueButton, QueryDialogueButton, _,
     __hasProp = {}.hasOwnProperty,
@@ -19726,7 +19782,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../utils/count-executor":114,"../export-dialogue":175,"../query-dialogue-button":243,"underscore":314}],177:[function(require,module,exports){
+},{"../../utils/count-executor":114,"../export-dialogue":177,"../query-dialogue-button":245,"underscore":317}],179:[function(require,module,exports){
 (function() {
   var AddColumnControl, ColumnControls, ColumnView, HasTypeaheads, HeadingLabel, LabelView, Messages, PathSet, ResetButton, Templates, View, pathSuggester, _,
     __hasProp = {}.hasOwnProperty,
@@ -20099,7 +20155,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages":53,"../../mixins/has-typeaheads":69,"../../models/path-set":92,"../../templates":104,"../../utils/path-suggester":133,"../label-view":216,"underscore":314}],178:[function(require,module,exports){
+},{"../../core-view":39,"../../messages":53,"../../mixins/has-typeaheads":69,"../../models/path-set":92,"../../templates":104,"../../utils/path-suggester":134,"../label-view":218,"underscore":317}],180:[function(require,module,exports){
 (function() {
   var CompressionControls, ModalBody, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -20152,7 +20208,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../templates":104,"./main":184,"underscore":314}],179:[function(require,module,exports){
+},{"../../templates":104,"./main":186,"underscore":317}],181:[function(require,module,exports){
 (function() {
   var CoreView, DestinationOptions, DestinationSubOptions, Formats, Options, RadioButtons, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -20319,7 +20375,8 @@ module.exports = '2.0.0-beta-42';
     DestinationOptions.prototype.events = function() {
       var evts, fmt, types, _i, _len, _ref;
       evts = {
-        '.change .im-param-name input': 'setName'
+        '.change .im-param-name input': 'setName',
+        'keyup input:text': 'onChangeFilename'
       };
       types = this.model.get('has');
       _ref = Formats.getFormats(types);
@@ -20328,6 +20385,12 @@ module.exports = '2.0.0-beta-42';
         evts["click .im-fmt-" + fmt.id] = this.setFormat.bind(this, fmt);
       }
       return evts;
+    };
+
+    DestinationOptions.prototype.onChangeFilename = function() {
+      return this.model.set({
+        filename: this.$('input:text').val()
+      });
     };
 
     DestinationOptions.prototype.setName = function(e) {
@@ -20348,7 +20411,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../models/export-formats":79,"../../options":100,"../../templates":104,"underscore":314}],180:[function(require,module,exports){
+},{"../../core-view":39,"../../models/export-formats":79,"../../options":100,"../../templates":104,"underscore":317}],182:[function(require,module,exports){
 (function() {
   var FastaOptions, LabelView, Messages, Templates, View, _,
     __hasProp = {}.hasOwnProperty,
@@ -20399,7 +20462,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages":53,"../../templates":104,"../label-view":216,"underscore":314}],181:[function(require,module,exports){
+},{"../../core-view":39,"../../messages":53,"../../templates":104,"../label-view":218,"underscore":317}],183:[function(require,module,exports){
 (function() {
   var FlatFileOptions, Templates, View, _,
     __hasProp = {}.hasOwnProperty,
@@ -20452,7 +20515,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../templates":104,"underscore":314}],182:[function(require,module,exports){
+},{"../../core-view":39,"../../templates":104,"underscore":317}],184:[function(require,module,exports){
 (function() {
   var FormatControls, Formats, HeadingView, LabelView, Messages, Templates, View, _,
     __hasProp = {}.hasOwnProperty,
@@ -20509,12 +20572,6 @@ module.exports = '2.0.0-beta-42';
       };
     };
 
-    FormatControls.prototype.onChangeFormat = function() {
-      return this.model.set({
-        format: this.$('input:radio:checked').val()
-      });
-    };
-
     FormatControls.prototype.postRender = function() {
       return this.renderChild('heading', new HeadingView({
         model: this.model
@@ -20527,7 +20584,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages":53,"../../models/export-formats":79,"../../templates":104,"../label-view":216,"underscore":314}],183:[function(require,module,exports){
+},{"../../core-view":39,"../../messages":53,"../../models/export-formats":79,"../../templates":104,"../label-view":218,"underscore":317}],185:[function(require,module,exports){
 (function() {
   var JSONOptions, LabelView, Messages, Templates, View, _,
     __hasProp = {}.hasOwnProperty,
@@ -20579,7 +20636,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages":53,"../../templates":104,"../label-view":216,"underscore":314}],184:[function(require,module,exports){
+},{"../../core-view":39,"../../messages":53,"../../templates":104,"../label-view":218,"underscore":317}],186:[function(require,module,exports){
 (function() {
   var ModalBody, View,
     __hasProp = {}.hasOwnProperty,
@@ -20605,7 +20662,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39}],185:[function(require,module,exports){
+},{"../../core-view":39}],187:[function(require,module,exports){
 (function() {
   var CoreView, Formats, Messages, PROPS, Preview, RunsQuery, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -20701,7 +20758,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages":53,"../../mixins/runs-query":70,"../../models/export-formats":79,"../../templates":104,"underscore":314}],186:[function(require,module,exports){
+},{"../../core-view":39,"../../messages":53,"../../mixins/runs-query":70,"../../models/export-formats":79,"../../templates":104,"underscore":317}],188:[function(require,module,exports){
 (function() {
   var HeadingLabel, LabelView, Messages, OffsetLabel, ResetButton, RowControls, SizeLabel, Templates, View, _,
     __hasProp = {}.hasOwnProperty,
@@ -20880,7 +20937,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages":53,"../../templates":104,"../label-view":216,"underscore":314}],187:[function(require,module,exports){
+},{"../../core-view":39,"../../messages":53,"../../templates":104,"../label-view":218,"underscore":317}],189:[function(require,module,exports){
 (function() {
   var Options, TABS, Tab, TabMenu, Templates, View, _,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
@@ -21066,7 +21123,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../options":100,"../../templates":104,"underscore":314}],188:[function(require,module,exports){
+},{"../../core-view":39,"../../options":100,"../../templates":104,"underscore":317}],190:[function(require,module,exports){
 (function() {
   var CoreView, Event, FacetItems, FacetView, FacetVisualisation, NumericRange, Options, SelectedCount, SetsPathNames, SummaryHeading, SummaryItems,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -21257,7 +21314,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../event":47,"../../mixins/sets-path-names":71,"../../models/numeric-range":87,"../../models/summary-items":97,"../../options":100,"./items":190,"./selected-count":197,"./summary-heading":198,"./visualisation":203}],189:[function(require,module,exports){
+},{"../../core-view":39,"../../event":47,"../../mixins/sets-path-names":71,"../../models/numeric-range":87,"../../models/summary-items":97,"../../options":100,"./items":192,"./selected-count":199,"./summary-heading":200,"./visualisation":205}],191:[function(require,module,exports){
 (function() {
   var HistoFacet, Messages, Options, VisualisationBase, bool, d3, scale, _,
     __hasProp = {}.hasOwnProperty,
@@ -21394,7 +21451,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../messages":53,"../../messages/summary":64,"../../options":100,"../../utils/casts":111,"./visualisation-base":202,"d3-browserify":283,"underscore":314}],190:[function(require,module,exports){
+},{"../../messages":53,"../../messages/summary":64,"../../options":100,"../../utils/casts":111,"./visualisation-base":204,"d3-browserify":285,"underscore":317}],192:[function(require,module,exports){
 (function() {
   var CoreView, FacetItems, NoResults, OnlyOneItem, REQ_ATTRS, SummaryItems, SummaryStats, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -21485,7 +21542,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../templates":104,"./no-results":191,"./only-one-item":193,"./summary-items":200,"./summary-stats":201,"underscore":314}],191:[function(require,module,exports){
+},{"../../core-view":39,"../../templates":104,"./no-results":193,"./only-one-item":195,"./summary-items":202,"./summary-stats":203,"underscore":317}],193:[function(require,module,exports){
 (function() {
   var CoreView, NoResults, Templates,
     __hasProp = {}.hasOwnProperty,
@@ -21522,7 +21579,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages/summary":64,"../../templates":104}],192:[function(require,module,exports){
+},{"../../core-view":39,"../../messages/summary":64,"../../templates":104}],194:[function(require,module,exports){
 (function() {
   var $, Messages, NULL_SELECTION_WIDTH, NumericDistribution, Options, VisualisationBase, bucketRange, d3, limited, scale, _,
     __hasProp = {}.hasOwnProperty,
@@ -21827,7 +21884,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../messages":53,"../../messages/summary":64,"../../options":100,"./visualisation-base":202,"d3-browserify":283,"jquery":312,"underscore":314}],193:[function(require,module,exports){
+},{"../../messages":53,"../../messages/summary":64,"../../options":100,"./visualisation-base":204,"d3-browserify":285,"jquery":314,"underscore":317}],195:[function(require,module,exports){
 (function() {
   var CoreView, OnlyOneItem, Templates,
     __hasProp = {}.hasOwnProperty,
@@ -21866,7 +21923,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../templates":104}],194:[function(require,module,exports){
+},{"../../core-view":39,"../../templates":104}],196:[function(require,module,exports){
 (function() {
   var $, DONUT, KEY, Options, PieChart, TWEEN_START, VisualisationBase, d3, getArc, getArcTween, getChartPalette, getEndPosition, getStartPosition, isPastSixOClock, opacity, _,
     __hasProp = {}.hasOwnProperty,
@@ -22055,7 +22112,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../options":100,"./visualisation-base":202,"d3-browserify":283,"jquery":312,"underscore":314}],195:[function(require,module,exports){
+},{"../../options":100,"./visualisation-base":204,"d3-browserify":285,"jquery":314,"underscore":317}],197:[function(require,module,exports){
 (function() {
   var CoreView, RowSurrogate, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -22107,7 +22164,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../templates":104,"underscore":314}],196:[function(require,module,exports){
+},{"../../core-view":39,"../../templates":104,"underscore":317}],198:[function(require,module,exports){
 (function() {
   var Checkbox, CoreView, FacetRow, RowSurrogate, Templates, bool, _,
     __hasProp = {}.hasOwnProperty,
@@ -22274,7 +22331,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../core/checkbox":40,"../../messages/summary":64,"../../templates":104,"./row-surrogate":195,"underscore":314}],197:[function(require,module,exports){
+},{"../../core-view":39,"../../core/checkbox":40,"../../messages/summary":64,"../../templates":104,"./row-surrogate":197,"underscore":317}],199:[function(require,module,exports){
 (function() {
   var CoreView, SelectedCount, Templates, fracWithinRange, fullyContained, getPartialCount, partiallyOverlapping, sum, sumCounts, sumPartials, _,
     __hasProp = {}.hasOwnProperty,
@@ -22435,7 +22492,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages/summary":64,"../../templates":104,"underscore":314}],198:[function(require,module,exports){
+},{"../../core-view":39,"../../messages/summary":64,"../../templates":104,"underscore":317}],200:[function(require,module,exports){
 (function() {
   var CoreView, SummaryHeading, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -22487,7 +22544,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages/summary":64,"../../templates":104,"underscore":314}],199:[function(require,module,exports){
+},{"../../core-view":39,"../../messages/summary":64,"../../templates":104,"underscore":317}],201:[function(require,module,exports){
 (function() {
   var BASIC_OPS, CoreView, IGNORE, MIN_VALS_OPTIMISATION, Messages, SUMMARY_FORMATS, SummaryItemsControls, Templates, bool, negateOps, _,
     __hasProp = {}.hasOwnProperty,
@@ -22756,7 +22813,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages":53,"../../messages/summary":64,"../../templates":104,"underscore":314}],200:[function(require,module,exports){
+},{"../../core-view":39,"../../messages":53,"../../messages/summary":64,"../../templates":104,"underscore":317}],202:[function(require,module,exports){
 (function() {
   var Backbone, CoreView, FacetRow, IGNORE, Messages, SetsPathNames, SummaryItems, SummaryItemsControls, Templates, rowId, _,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -22946,7 +23003,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages":53,"../../messages/summary":64,"../../mixins/sets-path-names":71,"../../templates":104,"./row":196,"./summary-items-controls":199,"backbone":269,"underscore":314}],201:[function(require,module,exports){
+},{"../../core-view":39,"../../messages":53,"../../messages/summary":64,"../../mixins/sets-path-names":71,"../../templates":104,"./row":198,"./summary-items-controls":201,"backbone":271,"underscore":317}],203:[function(require,module,exports){
 (function() {
   var CoreView, DOWN, NULL_STATS, SummaryStats, Templates, UP, _,
     __hasProp = {}.hasOwnProperty,
@@ -23200,7 +23257,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../templates":104,"underscore":314}],202:[function(require,module,exports){
+},{"../../core-view":39,"../../templates":104,"underscore":317}],204:[function(require,module,exports){
 (function() {
   var CoreView, VisualisationBase, d3, _,
     __hasProp = {}.hasOwnProperty,
@@ -23324,7 +23381,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"d3-browserify":283,"underscore":314}],203:[function(require,module,exports){
+},{"../../core-view":39,"d3-browserify":285,"underscore":317}],205:[function(require,module,exports){
 (function() {
   var CoreView, FacetVisualisation, Histogram, NumericDistribution, Options, PieChart, SummaryItems,
     __hasProp = {}.hasOwnProperty,
@@ -23398,7 +23455,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../options":100,"./histogram":189,"./numeric":192,"./pie":194,"./summary-items":200}],204:[function(require,module,exports){
+},{"../../core-view":39,"../../options":100,"./histogram":191,"./numeric":194,"./pie":196,"./summary-items":202}],206:[function(require,module,exports){
 (function() {
   var Body, Constraints, CoreView, FilterDialogue, LogicManager, Messages, Modal, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -23677,7 +23734,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../messages":53,"../messages/constraints":58,"../messages/logic":62,"../templates":104,"./constraints":168,"./modal":234,"underscore":314}],205:[function(require,module,exports){
+},{"../core-view":39,"../messages":53,"../messages/constraints":58,"../messages/logic":62,"../templates":104,"./constraints":170,"./modal":236,"underscore":317}],207:[function(require,module,exports){
 (function() {
   var FilterDialogue, FilterDialogueButton, QueryDialogueButton,
     __hasProp = {}.hasOwnProperty,
@@ -23712,7 +23769,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../messages/constraints":58,"../filter-dialogue":204,"../query-dialogue-button":243}],206:[function(require,module,exports){
+},{"../../messages/constraints":58,"../filter-dialogue":206,"../query-dialogue-button":245}],208:[function(require,module,exports){
 (function() {
   var CoreView, FormattedSorting, SortedPath, Templates, sortQueryByPath,
     __hasProp = {}.hasOwnProperty,
@@ -23819,7 +23876,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../templates":104,"../utils/sort-query-by-path":142,"./formatted/sorting-path":207}],207:[function(require,module,exports){
+},{"../core-view":39,"../templates":104,"../utils/sort-query-by-path":144,"./formatted/sorting-path":209}],209:[function(require,module,exports){
 (function() {
   var CoreView, INITIAL_CARETS, Icons, SortedPath, Templates, sortQueryByPath,
     __hasProp = {}.hasOwnProperty,
@@ -23884,7 +23941,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../icons":51,"../../templates":104,"../../utils/sort-query-by-path":142}],208:[function(require,module,exports){
+},{"../../core-view":39,"../../icons":51,"../../templates":104,"../../utils/sort-query-by-path":144}],210:[function(require,module,exports){
 (function() {
   exports.openDialogue = function(dialogue) {
     this.renderChild('__dialogue__', dialogue);
@@ -23898,7 +23955,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{}],209:[function(require,module,exports){
+},{}],211:[function(require,module,exports){
 (function() {
   var AttrDetailsModel, Collection, CoreModel, CoreView, CountsTitle, DetailsModel, ERROR, HIDDEN_FIELDS, ItemDetails, Options, PathModel, Preview, PreviewModel, Promise, RefDetailsModel, ReferenceCounts, ServiceType, SortedByName, Templates, acceptAttr, acceptRef, cantFindField, concat, getLeaves, types, _,
     __hasProp = {}.hasOwnProperty,
@@ -24348,7 +24405,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-model":38,"../core-view":39,"../core/collection":41,"../core/type-assertions":46,"../models/path":93,"../options":100,"../templates":104,"../utils/get-leaves":120,"./item-preview/counts-title":210,"./item-preview/details":211,"./item-preview/reference-counts":212,"es6-promise":284,"underscore":314}],210:[function(require,module,exports){
+},{"../core-model":38,"../core-view":39,"../core/collection":41,"../core/type-assertions":46,"../models/path":93,"../options":100,"../templates":104,"../utils/get-leaves":121,"./item-preview/counts-title":212,"./item-preview/details":213,"./item-preview/reference-counts":214,"es6-promise":286,"underscore":317}],212:[function(require,module,exports){
 (function() {
   var CoreView, CountsTitle, Messages, _,
     __hasProp = {}.hasOwnProperty,
@@ -24397,7 +24454,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages":53,"underscore":314}],211:[function(require,module,exports){
+},{"../../core-view":39,"../../messages":53,"underscore":317}],213:[function(require,module,exports){
 (function() {
   var ATTR, CoreView, ITEMS, ItemDetails, REFERENCE, Templates, ignore, _,
     __hasProp = {}.hasOwnProperty,
@@ -24476,7 +24533,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../templates":104,"../../utils/events":118,"underscore":314}],212:[function(require,module,exports){
+},{"../../core-view":39,"../../templates":104,"../../utils/events":118,"underscore":317}],214:[function(require,module,exports){
 (function() {
   var CoreView, ReferenceCounts, Templates,
     __hasProp = {}.hasOwnProperty,
@@ -24511,7 +24568,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../templates":104}],213:[function(require,module,exports){
+},{"../../core-view":39,"../../templates":104}],215:[function(require,module,exports){
 (function() {
   var Body, CoreView, FilterDialogue, Joins, Messages, Modal, areEql, _,
     __hasProp = {}.hasOwnProperty,
@@ -24621,7 +24678,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../messages":53,"../messages/joins":60,"../models/joins":84,"./join-manager/body":214,"./modal":234,"underscore":314}],214:[function(require,module,exports){
+},{"../core-view":39,"../messages":53,"../messages/joins":60,"../models/joins":84,"./join-manager/body":216,"./modal":236,"underscore":317}],216:[function(require,module,exports){
 (function() {
   var BtnClasses, ClassSet, CoreView, Join, JoinManagerBody, LINE_PARTS, Templates, otherStyle, _,
     __hasProp = {}.hasOwnProperty,
@@ -24787,7 +24844,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages/joins":60,"../../templates":104,"../../utils/css-class-set":116,"underscore":314}],215:[function(require,module,exports){
+},{"../../core-view":39,"../../messages/joins":60,"../../templates":104,"../../utils/css-class-set":116,"underscore":317}],217:[function(require,module,exports){
 (function() {
   var JoinManager, JoinManagerButton, QueryDialogueButton,
     __hasProp = {}.hasOwnProperty,
@@ -24822,7 +24879,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../messages/joins":60,"../join-manager":213,"../query-dialogue-button":243}],216:[function(require,module,exports){
+},{"../../messages/joins":60,"../join-manager":215,"../query-dialogue-button":245}],218:[function(require,module,exports){
 (function() {
   var LabelView, View,
     __hasProp = {}.hasOwnProperty,
@@ -24847,7 +24904,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39}],217:[function(require,module,exports){
+},{"../core-view":39}],219:[function(require,module,exports){
 (function() {
   var AppendFromPath, BaseAppendDialogue, FromPathMixin, Promise,
     __hasProp = {}.hasOwnProperty,
@@ -24874,7 +24931,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"./base-append-dialogue":220,"./from-path-mixin":226,"es6-promise":284}],218:[function(require,module,exports){
+},{"./base-append-dialogue":222,"./from-path-mixin":228,"es6-promise":286}],220:[function(require,module,exports){
 (function() {
   var AppendFromSelection, BaseAppendDialogue, Floating, FromSelectionMixin, Promise,
     __hasProp = {}.hasOwnProperty,
@@ -24905,7 +24962,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../mixins/floating-dialogue":67,"./base-append-dialogue":220,"./from-selection-mixin":227,"es6-promise":284}],219:[function(require,module,exports){
+},{"../../mixins/floating-dialogue":67,"./base-append-dialogue":222,"./from-selection-mixin":229,"es6-promise":286}],221:[function(require,module,exports){
 (function() {
   var AppendToListBody, CoreView, Messages, SelectWithLabel, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -24960,7 +25017,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../core/select-with-label":45,"../../messages":53,"../../messages/lists":61,"../../templates":104,"underscore":314}],220:[function(require,module,exports){
+},{"../../core-view":39,"../../core/select-with-label":45,"../../messages":53,"../../messages/lists":61,"../../templates":104,"underscore":317}],222:[function(require,module,exports){
 (function() {
   var AppendToListBody, AppendToListModel, BaseAppendDialogue, BaseCreateListDialogue, CoreCollection, CoreModel, LIST_NOT_SUITABLE, Messages, NO_SUITABLE_LISTS, NO_TARGET_SELECTED, PossibleList, PossibleLists, Promise, TARGET_DOES_NOT_EXIST, onlyCurrent, theListIsSuitable, unpackLists, _,
     __hasProp = {}.hasOwnProperty,
@@ -25238,7 +25295,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-model":38,"../../core/collection":41,"../../messages":53,"../../models/append-to-list":72,"./append-to-list-body":219,"./base-dialogue":221,"es6-promise":284,"underscore":314}],221:[function(require,module,exports){
+},{"../../core-model":38,"../../core/collection":41,"../../messages":53,"../../models/append-to-list":72,"./append-to-list-body":221,"./base-dialogue":223,"es6-promise":286,"underscore":317}],223:[function(require,module,exports){
 (function() {
   var ABSTRACT, BaseCreateListDialogue, CreateListModel, ListDialogueBody, Messages, Modal, _,
     __hasProp = {}.hasOwnProperty,
@@ -25434,7 +25491,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../messages":53,"../../messages/lists":61,"../../models/create-list":78,"../modal":234,"./body":222,"underscore":314}],222:[function(require,module,exports){
+},{"../../messages":53,"../../messages/lists":61,"../../models/create-list":78,"../modal":236,"./body":224,"underscore":317}],224:[function(require,module,exports){
 (function() {
   var CoreView, CreateListModel, InputWithButton, InputWithLabel, ListDialogueBody, ListTag, Messages, TagsApology, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -25608,7 +25665,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../core/input-with-button":42,"../../core/input-with-label":43,"../../messages":53,"../../messages/lists":61,"../../models/create-list":78,"../../templates":104,"./tag":228,"./tags-apology":229,"underscore":314}],223:[function(require,module,exports){
+},{"../../core-view":39,"../../core/input-with-button":42,"../../core/input-with-label":43,"../../messages":53,"../../messages/lists":61,"../../models/create-list":78,"../../templates":104,"./tag":230,"./tags-apology":231,"underscore":317}],225:[function(require,module,exports){
 (function() {
   var AppendFromPath, AppendPicker, ClassSet, Collection, CoreModel, CoreView, Counter, CreateFromPath, CreatePicker, ListDialogueButton, PathModel, Paths, SelectableNode, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -25956,7 +26013,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-model":38,"../../core-view":39,"../../core/collection":41,"../../messages/lists":61,"../../models/path":93,"../../templates":104,"../../utils/count-executor":114,"../../utils/css-class-set":116,"./append-from-path":217,"./append-from-selection":218,"./create-from-path":224,"./create-from-selection":225,"underscore":314}],224:[function(require,module,exports){
+},{"../../core-model":38,"../../core-view":39,"../../core/collection":41,"../../messages/lists":61,"../../models/path":93,"../../templates":104,"../../utils/count-executor":114,"../../utils/css-class-set":116,"./append-from-path":219,"./append-from-selection":220,"./create-from-path":226,"./create-from-selection":227,"underscore":317}],226:[function(require,module,exports){
 (function() {
   var BaseCreateListDialogue, CreateFromPath, FromPathMixin, Promise,
     __hasProp = {}.hasOwnProperty,
@@ -25983,7 +26040,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"./base-dialogue":221,"./from-path-mixin":226,"es6-promise":284}],225:[function(require,module,exports){
+},{"./base-dialogue":223,"./from-path-mixin":228,"es6-promise":286}],227:[function(require,module,exports){
 (function() {
   var BaseCreateListDialogue, CreateFromSelection, Floating, FromSelectionMixin, Promise, _,
     __hasProp = {}.hasOwnProperty,
@@ -26016,7 +26073,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../mixins/floating-dialogue":67,"./base-dialogue":221,"./from-selection-mixin":227,"es6-promise":284,"underscore":314}],226:[function(require,module,exports){
+},{"../../mixins/floating-dialogue":67,"./base-dialogue":223,"./from-selection-mixin":229,"es6-promise":286,"underscore":317}],228:[function(require,module,exports){
 (function() {
   var Promise;
 
@@ -26049,7 +26106,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"es6-promise":284}],227:[function(require,module,exports){
+},{"es6-promise":286}],229:[function(require,module,exports){
 (function() {
   var NO_COMMON_TYPE, NO_OBJECTS_SELECTED, SelectedObjects, TypeAssertions;
 
@@ -26147,7 +26204,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core/type-assertions":46,"../../models/selected-objects":95}],228:[function(require,module,exports){
+},{"../../core/type-assertions":46,"../../models/selected-objects":95}],230:[function(require,module,exports){
 (function() {
   var CoreView, ListTag, Templates,
     __hasProp = {}.hasOwnProperty,
@@ -26198,7 +26255,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../templates":104}],229:[function(require,module,exports){
+},{"../../core-view":39,"../../templates":104}],231:[function(require,module,exports){
 (function() {
   var CoreView, TagsApology, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -26239,7 +26296,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages/lists":61,"../../templates":104,"underscore":314}],230:[function(require,module,exports){
+},{"../../core-view":39,"../../messages/lists":61,"../../templates":104,"underscore":317}],232:[function(require,module,exports){
 (function() {
   var ListValueControls, Messages, Promise, View, formatList, fs, getOptionValue, helpers, html, mustacheSettings, template, withDisplayNames, _,
     __hasProp = {}.hasOwnProperty,
@@ -26439,7 +26496,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../messages":53,"../templates/helpers":105,"../templates/mustache-settings":106,"es6-promise":284,"underscore":314}],231:[function(require,module,exports){
+},{"../core-view":39,"../messages":53,"../templates/helpers":105,"../templates/mustache-settings":106,"es6-promise":286,"underscore":317}],233:[function(require,module,exports){
 (function() {
   var AttributeValueControls, LoopValueControls, Messages, Promise, SuggestionSource, fs, html, template, _,
     __hasProp = {}.hasOwnProperty,
@@ -26622,7 +26679,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../messages":53,"../utils/suggestion-source":144,"./attribute-value-controls":150,"es6-promise":284,"underscore":314}],232:[function(require,module,exports){
+},{"../messages":53,"../utils/suggestion-source":146,"./attribute-value-controls":152,"es6-promise":286,"underscore":317}],234:[function(require,module,exports){
 (function() {
   var LoopValueControls, Messages, Promise, View, fs, helpers, html, mustacheSettings, template, toNamedPath, toOption, _,
     __hasProp = {}.hasOwnProperty,
@@ -26756,7 +26813,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../messages":53,"../templates/helpers":105,"../templates/mustache-settings":106,"../utils/to-named-path":146,"es6-promise":284,"underscore":314}],233:[function(require,module,exports){
+},{"../core-view":39,"../messages":53,"../templates/helpers":105,"../templates/mustache-settings":106,"../utils/to-named-path":148,"es6-promise":286,"underscore":317}],235:[function(require,module,exports){
 (function() {
   var CoreView, ModalFooter, Templates, defaultData, _,
     __hasProp = {}.hasOwnProperty,
@@ -26806,7 +26863,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../templates":104,"underscore":314}],234:[function(require,module,exports){
+},{"../core-view":39,"../templates":104,"underscore":317}],236:[function(require,module,exports){
 (function() {
   var Messages, Modal, ModalFooter, Promise, Templates, View, modalTemplate, _,
     __hasProp = {}.hasOwnProperty,
@@ -27011,7 +27068,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../messages":53,"../templates":104,"./modal-footer":233,"es6-promise":284,"underscore":314}],235:[function(require,module,exports){
+},{"../core-view":39,"../messages":53,"../templates":104,"./modal-footer":235,"es6-promise":286,"underscore":317}],237:[function(require,module,exports){
 (function() {
   var Collection, IS_BLANK, Icons, Messages, Model, MultiValueControls, Options, Templates, ValueControl, ValueModel, Values, View, ignore, mustacheSettings, _,
     __hasProp = {}.hasOwnProperty,
@@ -27327,7 +27384,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-model":38,"../core-view":39,"../core/collection":41,"../icons":51,"../messages":53,"../options":100,"../patterns":101,"../templates":104,"../templates/mustache-settings":106,"../utils/events":118,"backbone":269,"underscore":314}],236:[function(require,module,exports){
+},{"../core-model":38,"../core-view":39,"../core/collection":41,"../icons":51,"../messages":53,"../options":100,"../patterns":101,"../templates":104,"../templates/mustache-settings":106,"../utils/events":118,"backbone":271,"underscore":317}],238:[function(require,module,exports){
 (function() {
   var ActiveConstraint, Messages, NewConstraint,
     __hasProp = {}.hasOwnProperty,
@@ -27371,7 +27428,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../messages":53,"./active-constraint":149}],237:[function(require,module,exports){
+},{"../messages":53,"./active-constraint":151}],239:[function(require,module,exports){
 (function() {
   var ConstraintAdder, Messages, Modal, NewFilterDialogue, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -27449,7 +27506,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../messages":53,"../templates":104,"./constraint-adder":165,"./modal":234,"underscore":314}],238:[function(require,module,exports){
+},{"../messages":53,"../templates":104,"./constraint-adder":167,"./modal":236,"underscore":317}],240:[function(require,module,exports){
 (function() {
   var Attribute, CoreView, Options, PathChooser, Reference, ReverseReference, RootClass, appendField, _,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -27653,7 +27710,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../options":100,"./pathtree/attribute":239,"./pathtree/reference":240,"./pathtree/reverse-reference":241,"./pathtree/root":242,"underscore":314}],239:[function(require,module,exports){
+},{"../core-view":39,"../options":100,"./pathtree/attribute":241,"./pathtree/reference":242,"./pathtree/reverse-reference":243,"./pathtree/root":244,"underscore":317}],241:[function(require,module,exports){
 (function() {
   var Attribute, Icons, Options, View, highlightMatch, notBlank, stripLeadingSegments, _,
     __hasProp = {}.hasOwnProperty,
@@ -27847,7 +27904,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../icons":51,"../../options":100,"underscore":314}],240:[function(require,module,exports){
+},{"../../core-view":39,"../../icons":51,"../../options":100,"underscore":317}],242:[function(require,module,exports){
 (function() {
   var Attribute, Icons, Reference, ignore,
     __hasProp = {}.hasOwnProperty,
@@ -27923,7 +27980,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../icons":51,"../../utils/events":118,"./attribute":239}],241:[function(require,module,exports){
+},{"../../icons":51,"../../utils/events":118,"./attribute":241}],243:[function(require,module,exports){
 (function() {
   var Icons, Reference, ReverseReference,
     __hasProp = {}.hasOwnProperty,
@@ -27969,7 +28026,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../icons":51,"./reference":240}],242:[function(require,module,exports){
+},{"../../icons":51,"./reference":242}],244:[function(require,module,exports){
 (function() {
   var Attribute, Icons, RootClass, _,
     __hasProp = {}.hasOwnProperty,
@@ -28040,7 +28097,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../icons":51,"./attribute":239,"underscore":314}],243:[function(require,module,exports){
+},{"../../icons":51,"./attribute":241,"underscore":317}],245:[function(require,module,exports){
 (function() {
   var CoreView, QueryDialogueButton, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -28146,7 +28203,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../templates":104,"underscore":314}],244:[function(require,module,exports){
+},{"../core-view":39,"../templates":104,"underscore":317}],246:[function(require,module,exports){
 (function() {
   var ColumnMangerButton, CoreView, FilterDialogueButton, HistoryType, JoinManagerButton, Listenable, QueryManagement, Structure, Types, UnionOf, _ref,
     __hasProp = {}.hasOwnProperty,
@@ -28206,7 +28263,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../core/type-assertions":46,"./column-manager/button":156,"./filter-dialogue/button":205,"./join-manager/button":215}],245:[function(require,module,exports){
+},{"../core-view":39,"../core/type-assertions":46,"./column-manager/button":158,"./filter-dialogue/button":207,"./join-manager/button":217}],247:[function(require,module,exports){
 (function() {
   var $, Bus, CodeGenButton, CoreView, ExportDialogueButton, ListDialogueButton, Options, QueryManagement, QueryTools, SUBSECTIONS, Templates, UndoHistory, subsection, _,
     __hasProp = {}.hasOwnProperty,
@@ -28354,7 +28411,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../options":100,"../templates":104,"../utils/events":118,"./code-gen-button":152,"./export-dialogue/button":176,"./list-dialogue/button":223,"./query-management-tools":244,"./undo-history":266,"jquery":312,"underscore":314}],246:[function(require,module,exports){
+},{"../core-view":39,"../options":100,"../templates":104,"../utils/events":118,"./code-gen-button":154,"./export-dialogue/button":178,"./list-dialogue/button":225,"./query-management-tools":246,"./undo-history":268,"jquery":314,"underscore":317}],248:[function(require,module,exports){
 (function() {
   var CellModelFactory, Collection, ColumnHeaders, CoreModel, CoreView, ErrorNotice, History, Messages, Options, PageSizer, Pagination, ResultsTable, RowsCollection, SelectedObjects, Table, TableModel, TableResults, TableSummary, Templates, Types, UNKNOWN_ERROR, UniqItems, _,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -28798,7 +28855,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-model":38,"../core-view":39,"../core/collection":41,"../core/type-assertions":46,"../messages":53,"../messages/table":65,"../models/column-headers":76,"../models/history":82,"../models/rows":94,"../models/selected-objects":95,"../models/table":98,"../models/uniq-items":99,"../options":100,"../templates":104,"../utils/cell-model-factory":112,"../utils/table-results":145,"./table/error-notice":251,"./table/inner":254,"./table/page-sizer":257,"./table/pagination":258,"./table/summary":264,"underscore":314}],247:[function(require,module,exports){
+},{"../core-model":38,"../core-view":39,"../core/collection":41,"../core/type-assertions":46,"../messages":53,"../messages/table":65,"../models/column-headers":76,"../models/history":82,"../models/rows":94,"../models/selected-objects":95,"../models/table":98,"../models/uniq-items":99,"../options":100,"../templates":104,"../utils/cell-model-factory":112,"../utils/table-results":147,"./table/error-notice":253,"./table/inner":256,"./table/page-sizer":259,"./table/pagination":260,"./table/summary":266,"underscore":317}],249:[function(require,module,exports){
 (function() {
   var CoreView, EmptyApology, RowView, TableBody, Templates, buildSkipped, _,
     __hasProp = {}.hasOwnProperty,
@@ -28970,7 +29027,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages/table":65,"../../templates":104,"../../utils/build-skipset":109,"underscore":314}],248:[function(require,module,exports){
+},{"../../core-view":39,"../../messages/table":65,"../../templates":104,"../../utils/build-skipset":109,"underscore":317}],250:[function(require,module,exports){
 (function() {
   var Cell, NestedTableModel, SubTable;
 
@@ -29015,7 +29072,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../models/nested-table":85,"./cell":249,"./subtable":263}],249:[function(require,module,exports){
+},{"../../models/nested-table":85,"./cell":251,"./subtable":265}],251:[function(require,module,exports){
 (function (global){
 (function() {
   var $, Cell, CellModel, CoreView, Formatting, Messages, Options, SelectedObjects, Templates, compatible, popoverTemplate, types, _, _compatible,
@@ -29640,7 +29697,7 @@ module.exports = '2.0.0-beta-42';
 }).call(this);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../../core-view":39,"../../core/type-assertions":46,"../../formatting":50,"../../messages":53,"../../models/cell":74,"../../models/selected-objects":95,"../../options":100,"../../templates":104,"jquery":312,"underscore":314}],250:[function(require,module,exports){
+},{"../../core-view":39,"../../core/type-assertions":46,"../../formatting":50,"../../messages":53,"../../models/cell":74,"../../models/selected-objects":95,"../../options":100,"../../templates":104,"jquery":314,"underscore":317}],252:[function(require,module,exports){
 (function() {
   var BAD_MODEL, DropDownColumnSummary, FacetView, NO_QUERY, PathModel, ignore, _,
     __hasProp = {}.hasOwnProperty,
@@ -29697,7 +29754,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../models/path":93,"../../utils/events":118,"../facets/facet-view":188,"underscore":314}],251:[function(require,module,exports){
+},{"../../models/path":93,"../../utils/events":118,"../facets/facet-view":190,"underscore":317}],253:[function(require,module,exports){
 (function (global){
 (function() {
   var CoreView, ErrorNotice, Messages, Options, Templates, VERSION, getDomain, imjs, indentXML, mailto, withPrettyPrintOne, withResource, _,
@@ -29800,7 +29857,7 @@ module.exports = '2.0.0-beta-42';
 }).call(this);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../../core-view":39,"../../messages":53,"../../messages/error":59,"../../options":100,"../../templates":104,"../../utils/indent-xml":125,"../../utils/mailto":129,"../../utils/with-cdn-resource":147,"../../version":148,"imjs":293,"underscore":314}],252:[function(require,module,exports){
+},{"../../core-view":39,"../../messages":53,"../../messages/error":59,"../../options":100,"../../templates":104,"../../utils/indent-xml":126,"../../utils/mailto":130,"../../utils/with-cdn-resource":149,"../../version":150,"imjs":295,"underscore":317}],254:[function(require,module,exports){
 (function() {
   var ColumnHeader, CoreView, TableHead, _,
     __hasProp = {}.hasOwnProperty,
@@ -29852,7 +29909,11 @@ module.exports = '2.0.0-beta-42';
     TableHead.prototype.renderHeader = function(tr, opts) {
       return (function(_this) {
         return function(model, i) {
-          return _this;
+          var header;
+          header = new ColumnHeader(_.extend({
+            model: model
+          }, opts));
+          return _this.renderChild(model.id, header, tr);
         };
       })(this);
     };
@@ -29863,7 +29924,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"./header":253,"underscore":314}],253:[function(require,module,exports){
+},{"../../core-view":39,"./header":255,"underscore":317}],255:[function(require,module,exports){
 (function() {
   var ClassSet, Collection, ColumnHeader, CoreView, DropDownColumnSummary, FormattedSorting, HeaderModel, Messages, ModelReader, Options, OuterJoinDropDown, SingleColumnConstraints, Templates, getViewPortHeight, getViewPortWidth, ignore, onChange, sortQueryByPath, _,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -29962,7 +30023,7 @@ module.exports = '2.0.0-beta-42';
     ColumnHeader.prototype.createClassSets = function() {
       this.classSets = {};
       this.classSets.headerClasses = new ClassSet({
-        'im-column-header': false,
+        'im-column-header': true,
         'im-minimised-th': ModelReader(this.model, 'minimised'),
         'im-is-composed': ModelReader(this.model, 'composed'),
         'im-has-constraint': ModelReader(this.model, 'numOfCons')
@@ -30233,7 +30294,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../core/collection":41,"../../messages":53,"../../messages/table":65,"../../models/header":81,"../../options":100,"../../templates":104,"../../utils/css-class-set":116,"../../utils/events":118,"../../utils/on-change":130,"../../utils/sort-query-by-path":142,"../constraints/single-column":172,"../formatted-sorting":206,"./column-summary":250,"./outer-join-summary":256,"underscore":314}],254:[function(require,module,exports){
+},{"../../core-view":39,"../../core/collection":41,"../../messages":53,"../../messages/table":65,"../../models/header":81,"../../options":100,"../../templates":104,"../../utils/css-class-set":116,"../../utils/events":118,"../../utils/on-change":131,"../../utils/sort-query-by-path":144,"../constraints/single-column":174,"../formatted-sorting":208,"./column-summary":252,"./outer-join-summary":258,"underscore":317}],256:[function(require,module,exports){
 (function() {
   var CellFactory, ColumnHeaders, CoreView, Formatting, History, PathSet, PopoverFactory, Preview, ResultsTable, SelectedObjects, TableBody, TableHead, TableModel, Templates, Types, flip, _,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -30356,7 +30417,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../core/type-assertions":46,"../../formatting":50,"../../models/column-headers":76,"../../models/history":82,"../../models/path-set":92,"../../models/selected-objects":95,"../../models/table":98,"../../templates":104,"../../utils/popover-factory":135,"../item-preview":209,"./body":247,"./cell-factory":248,"./head":252,"underscore":314}],255:[function(require,module,exports){
+},{"../../core-view":39,"../../core/type-assertions":46,"../../formatting":50,"../../models/column-headers":76,"../../models/history":82,"../../models/path-set":92,"../../models/selected-objects":95,"../../models/table":98,"../../templates":104,"../../utils/popover-factory":136,"../item-preview":211,"./body":249,"./cell-factory":250,"./head":254,"underscore":317}],257:[function(require,module,exports){
 (function() {
   var Actions, LargeTableDisuader, Modal, large_table_disuader, _,
     __hasProp = {}.hasOwnProperty,
@@ -30430,7 +30491,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../templates":104,"../modal":234,"underscore":314}],256:[function(require,module,exports){
+},{"../../templates":104,"../modal":236,"underscore":317}],258:[function(require,module,exports){
 (function() {
   var Collection, CoreView, DropDownColumnSummary, OuterJoinDropDown, PathModel, SubColumn, SubColumns, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -30567,7 +30628,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../core/collection":41,"../../models/path":93,"../../templates":104,"./column-summary":250,"underscore":314}],257:[function(require,module,exports){
+},{"../../core-view":39,"../../core/collection":41,"../../models/path":93,"../../templates":104,"./column-summary":252,"underscore":317}],259:[function(require,module,exports){
 (function() {
   var CoreView, Events, ExportDialogue, HasDialogues, LargeTableDisuader, NewFilterDialogue, PageSizer, Paging, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -30751,7 +30812,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../events":48,"../../templates":104,"../export-dialogue":175,"../has-dialogues":208,"../new-filter-dialogue":237,"./large-table-disuader":255,"./paging":259,"underscore":314}],258:[function(require,module,exports){
+},{"../../core-view":39,"../../events":48,"../../templates":104,"../export-dialogue":177,"../has-dialogues":210,"../new-filter-dialogue":239,"./large-table-disuader":257,"./paging":261,"underscore":317}],260:[function(require,module,exports){
 (function() {
   var Pagination, Paging, SELECT_LIMIT, View, ensureNumber, fs, html, strip, _,
     __hasProp = {}.hasOwnProperty,
@@ -30925,7 +30986,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"./paging":259,"underscore":314}],259:[function(require,module,exports){
+},{"../../core-view":39,"./paging":261,"underscore":317}],261:[function(require,module,exports){
 (function() {
   exports.getCurrentPage = function() {
     var size, start, _ref;
@@ -30966,7 +31027,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{}],260:[function(require,module,exports){
+},{}],262:[function(require,module,exports){
 (function() {
   var CoreView, SubtableHeader, SubtableHeaders, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -31078,7 +31139,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages/subtables":63,"../../templates":104,"underscore":314}],261:[function(require,module,exports){
+},{"../../core-view":39,"../../messages/subtables":63,"../../templates":104,"underscore":317}],263:[function(require,module,exports){
 (function() {
   var CoreView, SubtableHeader, SubtableInner, buildSkipped,
     __hasProp = {}.hasOwnProperty,
@@ -31167,7 +31228,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../utils/build-skipset":109,"./subtable-header":260}],262:[function(require,module,exports){
+},{"../../core-view":39,"../../utils/build-skipset":109,"./subtable-header":262}],264:[function(require,module,exports){
 (function() {
   var CoreView, Messages, SubtableSummary, Templates,
     __hasProp = {}.hasOwnProperty,
@@ -31229,7 +31290,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages":53,"../../messages/subtables":63,"../../templates":104}],263:[function(require,module,exports){
+},{"../../core-view":39,"../../messages":53,"../../messages/subtables":63,"../../templates":104}],265:[function(require,module,exports){
 (function() {
   var Collection, CoreView, INITIAL_STATE, NestedTableModel, Options, PathCollection, PathModel, SubTable, SubtableInner, SubtableSummary, Templates, TypeAssertions, ignore, _,
     __hasProp = {}.hasOwnProperty,
@@ -31384,7 +31445,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../core/collection":41,"../../core/type-assertions":46,"../../models/nested-table":85,"../../models/path":93,"../../options":100,"../../templates":104,"../../utils/events":118,"./subtable-inner":261,"./subtable-summary":262,"underscore":314}],264:[function(require,module,exports){
+},{"../../core-view":39,"../../core/collection":41,"../../core/type-assertions":46,"../../models/nested-table":85,"../../models/path":93,"../../options":100,"../../templates":104,"../../utils/events":118,"./subtable-inner":263,"./subtable-summary":264,"underscore":317}],266:[function(require,module,exports){
 (function() {
   var CoreView, TableSummary, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -31429,7 +31490,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../messages/table":65,"../../templates":104,"underscore":314}],265:[function(require,module,exports){
+},{"../../core-view":39,"../../messages/table":65,"../../templates":104,"underscore":317}],267:[function(require,module,exports){
 (function() {
   var Messages, Promise, TypeValueControls, View, asOption, fs, helpers, html, toNamedPath, _,
     __hasProp = {}.hasOwnProperty,
@@ -31592,7 +31653,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../messages":53,"../templates/helpers":105,"../utils/to-named-path":146,"es6-promise":284,"underscore":314}],266:[function(require,module,exports){
+},{"../core-view":39,"../messages":53,"../templates/helpers":105,"../utils/to-named-path":148,"es6-promise":286,"underscore":317}],268:[function(require,module,exports){
 (function() {
   var CoreView, ELLIPSIS, Ellipsis, Messages, Options, Step, Templates, UndoHistory, childId, notTrivial, _,
     __hasProp = {}.hasOwnProperty,
@@ -31790,7 +31851,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../core-view":39,"../messages":53,"../messages/undo":66,"../options":100,"../templates":104,"./undo-history/step":268,"underscore":314}],267:[function(require,module,exports){
+},{"../core-view":39,"../messages":53,"../messages/undo":66,"../options":100,"../templates":104,"./undo-history/step":270,"underscore":317}],269:[function(require,module,exports){
 (function() {
   var ClassSet, CoreView, QueryProperty, Templates, _,
     __hasProp = {}.hasOwnProperty,
@@ -31883,7 +31944,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../templates":104,"../../utils/css-class-set":116,"underscore":314}],268:[function(require,module,exports){
+},{"../../core-view":39,"../../templates":104,"../../utils/css-class-set":116,"underscore":317}],270:[function(require,module,exports){
 (function() {
   var Collection, ConstraintList, ConstraintModel, ConstraintsView, CoreView, M, ObjConstructorPM, OrderElementModel, PathModel, QueryProperty, SelectListView, SortOrder, SortOrderView, Templates, UndoStep, ViewList, idsLength, liftPathAndType, valuesLength, withAdded, _,
     __hasProp = {}.hasOwnProperty,
@@ -32306,7 +32367,7 @@ module.exports = '2.0.0-beta-42';
 
 }).call(this);
 
-},{"../../core-view":39,"../../core/collection":41,"../../messages":53,"../../messages/constraints":58,"../../messages/undo":66,"../../models/constraint":77,"../../models/order-element":90,"../../models/path":93,"../../templates":104,"./query-property-section":267,"underscore":314}],269:[function(require,module,exports){
+},{"../../core-view":39,"../../core/collection":41,"../../messages":53,"../../messages/constraints":58,"../../messages/undo":66,"../../models/constraint":77,"../../models/order-element":90,"../../models/path":93,"../../templates":104,"./query-property-section":269,"underscore":317}],271:[function(require,module,exports){
 (function (global){
 //     Backbone.js 1.2.3
 
@@ -34204,7 +34265,7 @@ module.exports = '2.0.0-beta-42';
 }));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"jquery":312,"underscore":314}],270:[function(require,module,exports){
+},{"jquery":314,"underscore":317}],272:[function(require,module,exports){
 // This file is autogenerated via the `commonjs` Grunt task. You can require() this file in a CommonJS environment.
 require('../../js/transition.js')
 require('../../js/alert.js')
@@ -34218,7 +34279,7 @@ require('../../js/popover.js')
 require('../../js/scrollspy.js')
 require('../../js/tab.js')
 require('../../js/affix.js')
-},{"../../js/affix.js":271,"../../js/alert.js":272,"../../js/button.js":273,"../../js/carousel.js":274,"../../js/collapse.js":275,"../../js/dropdown.js":276,"../../js/modal.js":277,"../../js/popover.js":278,"../../js/scrollspy.js":279,"../../js/tab.js":280,"../../js/tooltip.js":281,"../../js/transition.js":282}],271:[function(require,module,exports){
+},{"../../js/affix.js":273,"../../js/alert.js":274,"../../js/button.js":275,"../../js/carousel.js":276,"../../js/collapse.js":277,"../../js/dropdown.js":278,"../../js/modal.js":279,"../../js/popover.js":280,"../../js/scrollspy.js":281,"../../js/tab.js":282,"../../js/tooltip.js":283,"../../js/transition.js":284}],273:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: affix.js v3.3.5
  * http://getbootstrap.com/javascript/#affix
@@ -34382,7 +34443,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],272:[function(require,module,exports){
+},{}],274:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: alert.js v3.3.5
  * http://getbootstrap.com/javascript/#alerts
@@ -34478,7 +34539,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],273:[function(require,module,exports){
+},{}],275:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: button.js v3.3.5
  * http://getbootstrap.com/javascript/#buttons
@@ -34600,7 +34661,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],274:[function(require,module,exports){
+},{}],276:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: carousel.js v3.3.5
  * http://getbootstrap.com/javascript/#carousel
@@ -34839,7 +34900,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],275:[function(require,module,exports){
+},{}],277:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: collapse.js v3.3.5
  * http://getbootstrap.com/javascript/#collapse
@@ -35052,7 +35113,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],276:[function(require,module,exports){
+},{}],278:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: dropdown.js v3.3.5
  * http://getbootstrap.com/javascript/#dropdowns
@@ -35219,7 +35280,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],277:[function(require,module,exports){
+},{}],279:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: modal.js v3.3.5
  * http://getbootstrap.com/javascript/#modals
@@ -35558,7 +35619,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],278:[function(require,module,exports){
+},{}],280:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: popover.js v3.3.5
  * http://getbootstrap.com/javascript/#popovers
@@ -35668,7 +35729,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],279:[function(require,module,exports){
+},{}],281:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: scrollspy.js v3.3.5
  * http://getbootstrap.com/javascript/#scrollspy
@@ -35842,7 +35903,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],280:[function(require,module,exports){
+},{}],282:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: tab.js v3.3.5
  * http://getbootstrap.com/javascript/#tabs
@@ -35999,7 +36060,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],281:[function(require,module,exports){
+},{}],283:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: tooltip.js v3.3.5
  * http://getbootstrap.com/javascript/#tooltip
@@ -36515,7 +36576,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],282:[function(require,module,exports){
+},{}],284:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: transition.js v3.3.5
  * http://getbootstrap.com/javascript/#transitions
@@ -36576,7 +36637,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],283:[function(require,module,exports){
+},{}],285:[function(require,module,exports){
 module.exports = function() {
   var d3 = {
     version: "3.4.11"
@@ -45810,7 +45871,7 @@ module.exports = function() {
   return d3;
 }();
 
-},{}],284:[function(require,module,exports){
+},{}],286:[function(require,module,exports){
 (function (process,global){
 /*!
  * @overview es6-promise - a tiny implementation of Promises/A+.
@@ -46786,7 +46847,7 @@ module.exports = function() {
 
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":16}],285:[function(require,module,exports){
+},{"_process":16}],287:[function(require,module,exports){
 (function() {
   exports.ACCEPT_HEADER = {
     'xml': 'application/xml',
@@ -46811,7 +46872,7 @@ module.exports = function() {
 
 }).call(this);
 
-},{}],286:[function(require,module,exports){
+},{}],288:[function(require,module,exports){
 (function() {
   var ACCEPT_HEADER, JSONStream, PESKY_COMMA, URL, URLENC, USER_AGENT, VERSION, blocking, defer, error, getMsg, http, invoke, merge, parseOptions, rejectAfter, streaming, utils, _ref;
 
@@ -47042,7 +47103,7 @@ module.exports = function() {
 
 }).call(this);
 
-},{"./constants":285,"./util":297,"./version":298,"JSONStream":300,"http":9,"url":34}],287:[function(require,module,exports){
+},{"./constants":287,"./util":299,"./version":300,"JSONStream":302,"http":9,"url":34}],289:[function(require,module,exports){
 (function() {
   var CategoryResults, IDResolutionJob, IdResults, ONE_MINUTE, concatMap, defer, difference, fold, funcutils, get, id, intermine, uniqBy, withCB,
     __hasProp = {}.hasOwnProperty,
@@ -47342,7 +47403,7 @@ module.exports = function() {
 
 }).call(this);
 
-},{"./util":297}],288:[function(require,module,exports){
+},{"./util":299}],290:[function(require,module,exports){
 (function() {
   var INVITES, List, REQUIRES_VERSION, SHARES, TAGS_PATH, dejoin, get, getFolderName, intermine, invoke, isFolder, merge, set, utils, withCB,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -47532,7 +47593,7 @@ module.exports = function() {
 
 }).call(this);
 
-},{"./util":297}],289:[function(require,module,exports){
+},{"./util":299}],291:[function(require,module,exports){
 (function() {
   var JAVA_LANG_OBJ, Model, PathInfo, Table, error, find, flatten, intermine, omap, _ref,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -47671,7 +47732,7 @@ module.exports = function() {
 
 }).call(this);
 
-},{"./path":290,"./table":295,"./util":297}],290:[function(require,module,exports){
+},{"./path":292,"./table":297,"./util":299}],292:[function(require,module,exports){
 (function() {
   var NAMES, PARSED, PathInfo, any, concatMap, copy, error, get, intermine, makeKey, set, success, utils, withCB,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -47914,7 +47975,7 @@ module.exports = function() {
 
 }).call(this);
 
-},{"./util":297}],291:[function(require,module,exports){
+},{"./util":299}],293:[function(require,module,exports){
 (function() {
   var Promise;
 
@@ -47924,7 +47985,7 @@ module.exports = function() {
 
 }).call(this);
 
-},{"es6-promise":284}],292:[function(require,module,exports){
+},{"es6-promise":286}],294:[function(require,module,exports){
 (function() {
   var BASIC_ATTRS, CODES, Events, LIST_PIPE, Query, REQUIRES_VERSION, RESULTS_METHODS, SIMPLE_ATTRS, bioUriArgs, conAttrs, conStr, conToJSON, conValStr, concatMap, copyCon, decapitate, didntRemove, f, filter, fold, get, get_canonical_op, headLess, id, idConStr, intermine, interpretConArray, interpretConstraint, invoke, merge, mth, multiConStr, noUndefVals, noValueConStr, partition, removeIrrelevantSortOrders, simpleConStr, stringToSortOrder, stringifySortOrder, toQueryString, typeConStr, union, utils, withCB, _fn, _get_data_fetcher, _i, _j, _len, _len1, _ref,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
@@ -49749,7 +49810,7 @@ module.exports = function() {
 
 }).call(this);
 
-},{"./util":297,"./xml":299,"backbone-events-standalone":304}],293:[function(require,module,exports){
+},{"./util":299,"./xml":301,"backbone-events-standalone":306}],295:[function(require,module,exports){
 (function() {
   var ALWAYS_AUTH, CLASSKEYS, CLASSKEY_PATH, DEFAULT_ERROR_HANDLER, DEFAULT_PROTOCOL, ENRICHMENT_PATH, HAS_PROTOCOL, HAS_SUFFIX, IDResolutionJob, ID_RESOLUTION_PATH, LISTS_PATH, LIST_OPERATION_PATHS, LIST_PIPE, List, MODELS, MODEL_PATH, Model, NEEDS_AUTH, NO_AUTH, PATH_VALUES_PATH, PREF_PATH, Promise, QUERY_RESULTS_PATH, QUICKSEARCH_PATH, Query, RELEASES, RELEASE_PATH, REQUIRES_VERSION, SUBTRACT_PATH, SUFFIX, SUMMARYFIELDS_PATH, SUMMARY_FIELDS, Service, TABLE_ROW_PATH, TEMPLATES_PATH, TO_NAMES, USER_TOKENS, User, VERSIONS, VERSION_PATH, WHOAMI_PATH, WIDGETS, WIDGETS_PATH, WITH_OBJ_PATH, dejoin, error, get, getListFinder, http, invoke, map, merge, p, set, success, to_query_string, utils, version, withCB, _get_or_fetch, _i, _j, _len, _len1, _ref, _ref1,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -49932,11 +49993,14 @@ module.exports = function() {
   Service = (function() {
     var FIVE_MIN, checkNameParam, getNewUserToken, loadQ, pathValuesReq, toMapByName;
 
-    Service.prototype.doReq = http.doReq;
+    Service.prototype.doReq = function() {
+      arguments[0] = this.attachCustomHeaders(arguments[0]);
+      return http.doReq.apply(this, arguments);
+    };
 
     function Service(_arg) {
       var noCache;
-      this.root = _arg.root, this.token = _arg.token, this.errorHandler = _arg.errorHandler, this.DEBUG = _arg.DEBUG, this.help = _arg.help, noCache = _arg.noCache;
+      this.root = _arg.root, this.token = _arg.token, this.errorHandler = _arg.errorHandler, this.DEBUG = _arg.DEBUG, this.help = _arg.help, noCache = _arg.noCache, this.headers = _arg.headers;
       this.connectAs = __bind(this.connectAs, this);
       this.createList = __bind(this.createList, this);
       this.resolveIds = __bind(this.resolveIds, this);
@@ -49977,6 +50041,9 @@ module.exports = function() {
         this.root = this.root + SUFFIX;
       }
       this.root = this.root.replace(/ice$/, "ice/");
+      if (this.headers == null) {
+        this.headers = null;
+      }
       if (this.errorHandler == null) {
         this.errorHandler = DEFAULT_ERROR_HANDLER;
       }
@@ -50092,6 +50159,17 @@ module.exports = function() {
           return opts;
         };
       })(this));
+    };
+
+    Service.prototype.attachCustomHeaders = function(req) {
+      var opts;
+      if (this.headers != null) {
+        opts = utils.copy(req);
+        opts.headers = utils.merge(opts.headers, this.headers);
+        return opts;
+      } else {
+        return req;
+      }
     };
 
     Service.prototype.enrichment = function(opts, cb) {
@@ -50771,7 +50849,7 @@ module.exports = function() {
 
 }).call(this);
 
-},{"./http":286,"./id-resolution-job":287,"./lists":288,"./model":289,"./promise":291,"./query":292,"./user":296,"./util":297,"./version":298}],294:[function(require,module,exports){
+},{"./http":288,"./id-resolution-job":289,"./lists":290,"./model":291,"./promise":293,"./query":294,"./user":298,"./util":299,"./version":300}],296:[function(require,module,exports){
 (function (global){
 (function() {
   var FakeDomParser;
@@ -50788,7 +50866,7 @@ module.exports = function() {
 }).call(this);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],295:[function(require,module,exports){
+},{}],297:[function(require,module,exports){
 (function() {
   var Promise, merge, properties,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -50866,7 +50944,7 @@ module.exports = function() {
 
 }).call(this);
 
-},{"./promise":291}],296:[function(require,module,exports){
+},{"./promise":293}],298:[function(require,module,exports){
 (function() {
   var any, do_pref_req, error, get, isFunction, withCB, _ref,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -50964,7 +51042,7 @@ module.exports = function() {
 
 }).call(this);
 
-},{"./util":297}],297:[function(require,module,exports){
+},{"./util":299}],299:[function(require,module,exports){
 (function() {
   var Promise, REQUIRES, comp, curry, encode, entities, error, flatten, fold, id, invoke, invokeWith, isArray, merge, pairFold, qsFromList, root, success, thenFold, _ref,
     __slice = [].slice,
@@ -51252,6 +51330,20 @@ module.exports = function() {
     };
   };
 
+  root.merge = function(options, overrides) {
+    return extend(extend({}, options), overrides);
+  };
+
+  root.extend = function(obj, properties) {
+    var key, val, _results;
+    _results = [];
+    for (key in properties) {
+      val = properties[key];
+      _results.push(obj[key] = val);
+    }
+    return _results;
+  };
+
   root.id = id = function(x) {
     return x;
   };
@@ -51459,13 +51551,13 @@ module.exports = function() {
 
 }).call(this);
 
-},{"./promise":291}],298:[function(require,module,exports){
+},{"./promise":293}],300:[function(require,module,exports){
 (function() {
-  exports.VERSION = '3.14.1';
+  exports.VERSION = '3.15.0';
 
 }).call(this);
 
-},{}],299:[function(require,module,exports){
+},{}],301:[function(require,module,exports){
 (function() {
   var DOMParser, sanitize;
 
@@ -51506,7 +51598,7 @@ module.exports = function() {
 
 }).call(this);
 
-},{"xmldom":294}],300:[function(require,module,exports){
+},{"xmldom":296}],302:[function(require,module,exports){
 (function (process,Buffer){
 
 
@@ -51703,7 +51795,7 @@ if(!module.parent && process.title !== 'browser') {
 }
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":16,"buffer":4,"jsonparse":301,"through":302}],301:[function(require,module,exports){
+},{"_process":16,"buffer":4,"jsonparse":303,"through":304}],303:[function(require,module,exports){
 (function (Buffer){
 /*global Buffer*/
 // Named constants with unique integer values
@@ -52108,7 +52200,7 @@ proto.onToken = function (token, value) {
 module.exports = Parser;
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":4}],302:[function(require,module,exports){
+},{"buffer":4}],304:[function(require,module,exports){
 (function (process){
 var Stream = require('stream')
 
@@ -52220,7 +52312,7 @@ function through (write, end, opts) {
 
 
 }).call(this,require('_process'))
-},{"_process":16,"stream":32}],303:[function(require,module,exports){
+},{"_process":16,"stream":32}],305:[function(require,module,exports){
 /**
  * Standalone extraction of Backbone.Events, no external dependency required.
  * Degrades nicely when Backone/underscore are already available in the current
@@ -52498,10 +52590,10 @@ function through (write, end, opts) {
   }
 })(this);
 
-},{}],304:[function(require,module,exports){
+},{}],306:[function(require,module,exports){
 module.exports = require('./backbone-events-standalone');
 
-},{"./backbone-events-standalone":303}],305:[function(require,module,exports){
+},{"./backbone-events-standalone":305}],307:[function(require,module,exports){
 var jQuery = require('jquery');
 
 /*!
@@ -52825,7 +52917,7 @@ $.extend( $.ui, {
 
 })( jQuery );
 
-},{"jquery":312}],306:[function(require,module,exports){
+},{"jquery":314}],308:[function(require,module,exports){
 var jQuery = require('jquery');
 require('./core');
 require('./mouse');
@@ -53790,7 +53882,7 @@ $.ui.plugin.add("draggable", "zIndex", {
 
 })(jQuery);
 
-},{"./core":305,"./mouse":308,"./widget":311,"jquery":312}],307:[function(require,module,exports){
+},{"./core":307,"./mouse":310,"./widget":313,"jquery":314}],309:[function(require,module,exports){
 var jQuery = require('jquery');
 require('./core');
 require('./widget');
@@ -54187,7 +54279,7 @@ $.ui.ddmanager = {
 
 })(jQuery);
 
-},{"./core":305,"./draggable":306,"./mouse":308,"./widget":311,"jquery":312}],308:[function(require,module,exports){
+},{"./core":307,"./draggable":308,"./mouse":310,"./widget":313,"jquery":314}],310:[function(require,module,exports){
 var jQuery = require('jquery');
 require('./widget');
 
@@ -54361,7 +54453,7 @@ $.widget("ui.mouse", {
 
 })(jQuery);
 
-},{"./widget":311,"jquery":312}],309:[function(require,module,exports){
+},{"./widget":313,"jquery":314}],311:[function(require,module,exports){
 var jQuery = require('jquery');
 require('./core');
 require('./mouse');
@@ -55044,7 +55136,7 @@ $.widget( "ui.slider", $.ui.mouse, {
 
 }(jQuery));
 
-},{"./core":305,"./mouse":308,"./widget":311,"jquery":312}],310:[function(require,module,exports){
+},{"./core":307,"./mouse":310,"./widget":313,"jquery":314}],312:[function(require,module,exports){
 var jQuery = require('jquery');
 require('./core');
 require('./mouse');
@@ -56340,7 +56432,7 @@ $.widget("ui.sortable", $.ui.mouse, {
 
 })(jQuery);
 
-},{"./core":305,"./mouse":308,"./widget":311,"jquery":312}],311:[function(require,module,exports){
+},{"./core":307,"./mouse":310,"./widget":313,"jquery":314}],313:[function(require,module,exports){
 var jQuery = require('jquery');
 
 /*!
@@ -56865,7 +56957,7 @@ $.each( { show: "fadeIn", hide: "fadeOut" }, function( method, defaultEffect ) {
 
 })( jQuery );
 
-},{"jquery":312}],312:[function(require,module,exports){
+},{"jquery":314}],314:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.4
  * http://jquery.com/
@@ -66077,7 +66169,442 @@ return jQuery;
 
 }));
 
-},{}],313:[function(require,module,exports){
+},{}],315:[function(require,module,exports){
+/* global define */
+
+(function (root, pluralize) {
+  /* istanbul ignore else */
+  if (typeof require === 'function' && typeof exports === 'object' && typeof module === 'object') {
+    // Node.
+    module.exports = pluralize();
+  } else if (typeof define === 'function' && define.amd) {
+    // AMD, registers as an anonymous module.
+    define(function () {
+      return pluralize();
+    });
+  } else {
+    // Browser global.
+    root.pluralize = pluralize();
+  }
+})(this, function () {
+  // Rule storage - pluralize and singularize need to be run sequentially,
+  // while other rules can be optimized using an object for instant lookups.
+  var pluralRules = [];
+  var singularRules = [];
+  var uncountables = {};
+  var irregularPlurals = {};
+  var irregularSingles = {};
+
+  /**
+   * Title case a string.
+   *
+   * @param  {string} str
+   * @return {string}
+   */
+  function toTitleCase (str) {
+    return str.charAt(0).toUpperCase() + str.substr(1).toLowerCase();
+  }
+
+  /**
+   * Sanitize a pluralization rule to a usable regular expression.
+   *
+   * @param  {(RegExp|string)} rule
+   * @return {RegExp}
+   */
+  function sanitizeRule (rule) {
+    if (typeof rule === 'string') {
+      return new RegExp('^' + rule + '$', 'i');
+    }
+
+    return rule;
+  }
+
+  /**
+   * Pass in a word token to produce a function that can replicate the case on
+   * another word.
+   *
+   * @param  {string}   word
+   * @param  {string}   token
+   * @return {Function}
+   */
+  function restoreCase (word, token) {
+    // Upper cased words. E.g. "HELLO".
+    if (word === word.toUpperCase()) {
+      return token.toUpperCase();
+    }
+
+    // Title cased words. E.g. "Title".
+    if (word[0] === word[0].toUpperCase()) {
+      return toTitleCase(token);
+    }
+
+    // Lower cased words. E.g. "test".
+    return token.toLowerCase();
+  }
+
+  /**
+   * Interpolate a regexp string.
+   *
+   * @param  {string} str
+   * @param  {Array}  args
+   * @return {string}
+   */
+  function interpolate (str, args) {
+    return str.replace(/\$(\d{1,2})/g, function (match, index) {
+      return args[index] || '';
+    });
+  }
+
+  /**
+   * Sanitize a word by passing in the word and sanitization rules.
+   *
+   * @param  {String}   token
+   * @param  {String}   word
+   * @param  {Array}    collection
+   * @return {String}
+   */
+  function sanitizeWord (token, word, collection) {
+    // Empty string or doesn't need fixing.
+    if (!token.length || uncountables.hasOwnProperty(token)) {
+      return word;
+    }
+
+    var len = collection.length;
+
+    // Iterate over the sanitization rules and use the first one to match.
+    while (len--) {
+      var rule = collection[len];
+
+      // If the rule passes, return the replacement.
+      if (rule[0].test(word)) {
+        return word.replace(rule[0], function (match, index, word) {
+          var result = interpolate(rule[1], arguments);
+
+          if (match === '') {
+            return restoreCase(word[index - 1], result);
+          }
+
+          return restoreCase(match, result);
+        });
+      }
+    }
+
+    return word;
+  }
+
+  /**
+   * Replace a word with the updated word.
+   *
+   * @param  {Object}   replaceMap
+   * @param  {Object}   keepMap
+   * @param  {Array}    rules
+   * @return {Function}
+   */
+  function replaceWord (replaceMap, keepMap, rules) {
+    return function (word) {
+      // Get the correct token and case restoration functions.
+      var token = word.toLowerCase();
+
+      // Check against the keep object map.
+      if (keepMap.hasOwnProperty(token)) {
+        return restoreCase(word, token);
+      }
+
+      // Check against the replacement map for a direct word replacement.
+      if (replaceMap.hasOwnProperty(token)) {
+        return restoreCase(word, replaceMap[token]);
+      }
+
+      // Run all the rules against the word.
+      return sanitizeWord(token, word, rules);
+    };
+  }
+
+  /**
+   * Pluralize or singularize a word based on the passed in count.
+   *
+   * @param  {String}  word
+   * @param  {Number}  count
+   * @param  {Boolean} inclusive
+   * @return {String}
+   */
+  function pluralize (word, count, inclusive) {
+    var pluralized = count === 1
+      ? pluralize.singular(word) : pluralize.plural(word);
+
+    return (inclusive ? count + ' ' : '') + pluralized;
+  }
+
+  /**
+   * Pluralize a word.
+   *
+   * @type {Function}
+   */
+  pluralize.plural = replaceWord(
+    irregularSingles, irregularPlurals, pluralRules
+  );
+
+  /**
+   * Singularize a word.
+   *
+   * @type {Function}
+   */
+  pluralize.singular = replaceWord(
+    irregularPlurals, irregularSingles, singularRules
+  );
+
+  /**
+   * Add a pluralization rule to the collection.
+   *
+   * @param {(string|RegExp)} rule
+   * @param {string}          replacement
+   */
+  pluralize.addPluralRule = function (rule, replacement) {
+    pluralRules.push([sanitizeRule(rule), replacement]);
+  };
+
+  /**
+   * Add a singularization rule to the collection.
+   *
+   * @param {(string|RegExp)} rule
+   * @param {string}          replacement
+   */
+  pluralize.addSingularRule = function (rule, replacement) {
+    singularRules.push([sanitizeRule(rule), replacement]);
+  };
+
+  /**
+   * Add an uncountable word rule.
+   *
+   * @param {(string|RegExp)} word
+   */
+  pluralize.addUncountableRule = function (word) {
+    if (typeof word === 'string') {
+      uncountables[word.toLowerCase()] = true;
+      return;
+    }
+
+    // Set singular and plural references for the word.
+    pluralize.addPluralRule(word, '$0');
+    pluralize.addSingularRule(word, '$0');
+  };
+
+  /**
+   * Add an irregular word definition.
+   *
+   * @param {String} single
+   * @param {String} plural
+   */
+  pluralize.addIrregularRule = function (single, plural) {
+    plural = plural.toLowerCase();
+    single = single.toLowerCase();
+
+    irregularSingles[single] = plural;
+    irregularPlurals[plural] = single;
+  };
+
+  /**
+   * Irregular rules.
+   */
+  [
+    // Pronouns.
+    ['I', 'we'],
+    ['me', 'us'],
+    ['he', 'they'],
+    ['she', 'they'],
+    ['them', 'them'],
+    ['myself', 'ourselves'],
+    ['yourself', 'yourselves'],
+    ['itself', 'themselves'],
+    ['herself', 'themselves'],
+    ['himself', 'themselves'],
+    ['themself', 'themselves'],
+    ['is', 'are'],
+    ['this', 'these'],
+    ['that', 'those'],
+    // Words ending in with a consonant and `o`.
+    ['echo', 'echoes'],
+    ['dingo', 'dingoes'],
+    ['volcano', 'volcanoes'],
+    ['tornado', 'tornadoes'],
+    ['torpedo', 'torpedoes'],
+    // Ends with `us`.
+    ['genus', 'genera'],
+    ['viscus', 'viscera'],
+    // Ends with `ma`.
+    ['stigma', 'stigmata'],
+    ['stoma', 'stomata'],
+    ['dogma', 'dogmata'],
+    ['lemma', 'lemmata'],
+    ['schema', 'schemata'],
+    ['anathema', 'anathemata'],
+    // Other irregular rules.
+    ['ox', 'oxen'],
+    ['axe', 'axes'],
+    ['die', 'dice'],
+    ['yes', 'yeses'],
+    ['foot', 'feet'],
+    ['eave', 'eaves'],
+    ['goose', 'geese'],
+    ['tooth', 'teeth'],
+    ['quiz', 'quizzes'],
+    ['human', 'humans'],
+    ['proof', 'proofs'],
+    ['carve', 'carves'],
+    ['valve', 'valves'],
+    ['thief', 'thieves'],
+    ['genie', 'genies'],
+    ['groove', 'grooves'],
+    ['pickaxe', 'pickaxes'],
+    ['whiskey', 'whiskies']
+  ].forEach(function (rule) {
+    return pluralize.addIrregularRule(rule[0], rule[1]);
+  });
+
+  /**
+   * Pluralization rules.
+   */
+  [
+    [/s?$/i, 's'],
+    [/([^aeiou]ese)$/i, '$1'],
+    [/(ax|test)is$/i, '$1es'],
+    [/(alias|[^aou]us|tlas|gas|ris)$/i, '$1es'],
+    [/(e[mn]u)s?$/i, '$1s'],
+    [/([^l]ias|[aeiou]las|[emjzr]as|[iu]am)$/i, '$1'],
+    [/(alumn|syllab|octop|vir|radi|nucle|fung|cact|stimul|termin|bacill|foc|uter|loc|strat)(?:us|i)$/i, '$1i'],
+    [/(alumn|alg|vertebr)(?:a|ae)$/i, '$1ae'],
+    [/(seraph|cherub)(?:im)?$/i, '$1im'],
+    [/(her|at|gr)o$/i, '$1oes'],
+    [/(agend|addend|millenni|dat|extrem|bacteri|desiderat|strat|candelabr|errat|ov|symposi|curricul|automat|quor)(?:a|um)$/i, '$1a'],
+    [/(apheli|hyperbat|periheli|asyndet|noumen|phenomen|criteri|organ|prolegomen|hedr|automat)(?:a|on)$/i, '$1a'],
+    [/sis$/i, 'ses'],
+    [/(?:(kni|wi|li)fe|(ar|l|ea|eo|oa|hoo)f)$/i, '$1$2ves'],
+    [/([^aeiouy]|qu)y$/i, '$1ies'],
+    [/([^ch][ieo][ln])ey$/i, '$1ies'],
+    [/(x|ch|ss|sh|zz)$/i, '$1es'],
+    [/(matr|cod|mur|sil|vert|ind|append)(?:ix|ex)$/i, '$1ices'],
+    [/(m|l)(?:ice|ouse)$/i, '$1ice'],
+    [/(pe)(?:rson|ople)$/i, '$1ople'],
+    [/(child)(?:ren)?$/i, '$1ren'],
+    [/eaux$/i, '$0'],
+    [/m[ae]n$/i, 'men'],
+    ['thou', 'you']
+  ].forEach(function (rule) {
+    return pluralize.addPluralRule(rule[0], rule[1]);
+  });
+
+  /**
+   * Singularization rules.
+   */
+  [
+    [/s$/i, ''],
+    [/(ss)$/i, '$1'],
+    [/((a)naly|(b)a|(d)iagno|(p)arenthe|(p)rogno|(s)ynop|(t)he)(?:sis|ses)$/i, '$1sis'],
+    [/(^analy)(?:sis|ses)$/i, '$1sis'],
+    [/(wi|kni|(?:after|half|high|low|mid|non|night|[^\w]|^)li)ves$/i, '$1fe'],
+    [/(ar|(?:wo|[ae])l|[eo][ao])ves$/i, '$1f'],
+    [/([^aeiouy]|qu)ies$/i, '$1y'],
+    [/(^[pl]|zomb|^(?:neck)?t|[aeo][lt]|cut)ies$/i, '$1ie'],
+    [/(\b(?:mon|smil))ies$/i, '$1ey'],
+    [/(m|l)ice$/i, '$1ouse'],
+    [/(seraph|cherub)im$/i, '$1'],
+    [/(x|ch|ss|sh|zz|tto|go|cho|alias|[^aou]us|tlas|gas|(?:her|at|gr)o|ris)(?:es)?$/i, '$1'],
+    [/(e[mn]u)s?$/i, '$1'],
+    [/(movie|twelve)s$/i, '$1'],
+    [/(cris|test|diagnos)(?:is|es)$/i, '$1is'],
+    [/(alumn|syllab|octop|vir|radi|nucle|fung|cact|stimul|termin|bacill|foc|uter|loc|strat)(?:us|i)$/i, '$1us'],
+    [/(agend|addend|millenni|dat|extrem|bacteri|desiderat|strat|candelabr|errat|ov|symposi|curricul|quor)a$/i, '$1um'],
+    [/(apheli|hyperbat|periheli|asyndet|noumen|phenomen|criteri|organ|prolegomen|hedr|automat)a$/i, '$1on'],
+    [/(alumn|alg|vertebr)ae$/i, '$1a'],
+    [/(cod|mur|sil|vert|ind)ices$/i, '$1ex'],
+    [/(matr|append)ices$/i, '$1ix'],
+    [/(pe)(rson|ople)$/i, '$1rson'],
+    [/(child)ren$/i, '$1'],
+    [/(eau)x?$/i, '$1'],
+    [/men$/i, 'man']
+  ].forEach(function (rule) {
+    return pluralize.addSingularRule(rule[0], rule[1]);
+  });
+
+  /**
+   * Uncountable rules.
+   */
+  [
+    // Singular words with no plurals.
+    'advice',
+    'agenda',
+    'bison',
+    'bream',
+    'buffalo',
+    'carp',
+    'chassis',
+    'cod',
+    'cooperation',
+    'corps',
+    'digestion',
+    'debris',
+    'diabetes',
+    'energy',
+    'equipment',
+    'elk',
+    'excretion',
+    'expertise',
+    'flounder',
+    'gallows',
+    'garbage',
+    'graffiti',
+    'headquarters',
+    'health',
+    'herpes',
+    'highjinks',
+    'homework',
+    'information',
+    'jeans',
+    'justice',
+    'kudos',
+    'labour',
+    'machinery',
+    'mackerel',
+    'media',
+    'mews',
+    'moose',
+    'news',
+    'pike',
+    'plankton',
+    'pliers',
+    'pollution',
+    'premises',
+    'rain',
+    'rice',
+    'salmon',
+    'scissors',
+    'series',
+    'sewage',
+    'shambles',
+    'shrimp',
+    'species',
+    'staff',
+    'swine',
+    'trout',
+    'tuna',
+    'whiting',
+    'wildebeest',
+    'wildlife',
+    'you',
+    // Regexes.
+    /pox$/i, // "chickpox", "smallpox"
+    /ois$/i,
+    /deer$/i, // "deer", "reindeer"
+    /fish$/i, // "fish", "blowfish", "angelfish"
+    /sheep$/i,
+    /measles$/i,
+    /[^aeiou]ese$/i // "chinese", "japanese"
+  ].forEach(pluralize.addUncountableRule);
+
+  return pluralize;
+});
+
+},{}],316:[function(require,module,exports){
 /*!
  * typeahead.js 0.10.5
  * https://github.com/twitter/typeahead.js
@@ -67860,7 +68387,7 @@ return jQuery;
         };
     })();
 })(window.jQuery);
-},{}],314:[function(require,module,exports){
+},{}],317:[function(require,module,exports){
 //     Underscore.js 1.8.3
 //     http://underscorejs.org
 //     (c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -69410,7 +69937,7 @@ return jQuery;
   }
 }.call(this));
 
-},{}],315:[function(require,module,exports){
+},{}],318:[function(require,module,exports){
 /*
  * js_channel is a very lightweight abstraction on top of
  * postMessage which defines message formats and semantics
@@ -70051,439 +70578,6 @@ return jQuery;
   return Channel;
 }));
 
-},{}],316:[function(require,module,exports){
-/* global define */
-
-(function (root, pluralize) {
-  /* istanbul ignore else */
-  if (typeof require === 'function' && typeof exports === 'object' && typeof module === 'object') {
-    // Node.
-    module.exports = pluralize();
-  } else if (typeof define === 'function' && define.amd) {
-    // AMD, registers as an anonymous module.
-    define(function () {
-      return pluralize();
-    });
-  } else {
-    // Browser global.
-    root.pluralize = pluralize();
-  }
-})(this, function () {
-  // Rule storage - pluralize and singularize need to be run sequentially,
-  // while other rules can be optimized using an object for instant lookups.
-  var pluralRules = [];
-  var singularRules = [];
-  var uncountables = {};
-  var irregularPlurals = {};
-  var irregularSingles = {};
-
-  /**
-   * Title case a string.
-   *
-   * @param  {string} str
-   * @return {string}
-   */
-  function toTitleCase (str) {
-    return str.charAt(0).toUpperCase() + str.substr(1).toLowerCase();
-  }
-
-  /**
-   * Sanitize a pluralization rule to a usable regular expression.
-   *
-   * @param  {(RegExp|string)} rule
-   * @return {RegExp}
-   */
-  function sanitizeRule (rule) {
-    if (typeof rule === 'string') {
-      return new RegExp('^' + rule + '$', 'i');
-    }
-
-    return rule;
-  }
-
-  /**
-   * Pass in a word token to produce a function that can replicate the case on
-   * another word.
-   *
-   * @param  {string}   word
-   * @param  {string}   token
-   * @return {Function}
-   */
-  function restoreCase (word, token) {
-    // Upper cased words. E.g. "HELLO".
-    if (word === word.toUpperCase()) {
-      return token.toUpperCase();
-    }
-
-    // Title cased words. E.g. "Title".
-    if (word[0] === word[0].toUpperCase()) {
-      return toTitleCase(token);
-    }
-
-    // Lower cased words. E.g. "test".
-    return token.toLowerCase();
-  }
-
-  /**
-   * Interpolate a regexp string.
-   *
-   * @param  {string} str
-   * @param  {Array}  args
-   * @return {string}
-   */
-  function interpolate (str, args) {
-    return str.replace(/\$(\d{1,2})/g, function (match, index) {
-      return args[index] || '';
-    });
-  }
-
-  /**
-   * Sanitize a word by passing in the word and sanitization rules.
-   *
-   * @param  {String}   token
-   * @param  {String}   word
-   * @param  {Array}    collection
-   * @return {String}
-   */
-  function sanitizeWord (token, word, collection) {
-    // Empty string or doesn't need fixing.
-    if (!token.length || uncountables.hasOwnProperty(token)) {
-      return word;
-    }
-
-    var len = collection.length;
-
-    // Iterate over the sanitization rules and use the first one to match.
-    while (len--) {
-      var rule = collection[len];
-
-      // If the rule passes, return the replacement.
-      if (rule[0].test(word)) {
-        return word.replace(rule[0], function (match, index, word) {
-          var result = interpolate(rule[1], arguments);
-
-          if (match === '') {
-            return restoreCase(word[index - 1], result);
-          }
-
-          return restoreCase(match, result);
-        });
-      }
-    }
-
-    return word;
-  }
-
-  /**
-   * Replace a word with the updated word.
-   *
-   * @param  {Object}   replaceMap
-   * @param  {Object}   keepMap
-   * @param  {Array}    rules
-   * @return {Function}
-   */
-  function replaceWord (replaceMap, keepMap, rules) {
-    return function (word) {
-      // Get the correct token and case restoration functions.
-      var token = word.toLowerCase();
-
-      // Check against the keep object map.
-      if (keepMap.hasOwnProperty(token)) {
-        return restoreCase(word, token);
-      }
-
-      // Check against the replacement map for a direct word replacement.
-      if (replaceMap.hasOwnProperty(token)) {
-        return restoreCase(word, replaceMap[token]);
-      }
-
-      // Run all the rules against the word.
-      return sanitizeWord(token, word, rules);
-    };
-  }
-
-  /**
-   * Pluralize or singularize a word based on the passed in count.
-   *
-   * @param  {String}  word
-   * @param  {Number}  count
-   * @param  {Boolean} inclusive
-   * @return {String}
-   */
-  function pluralize (word, count, inclusive) {
-    var pluralized = count === 1
-      ? pluralize.singular(word) : pluralize.plural(word);
-
-    return (inclusive ? count + ' ' : '') + pluralized;
-  }
-
-  /**
-   * Pluralize a word.
-   *
-   * @type {Function}
-   */
-  pluralize.plural = replaceWord(
-    irregularSingles, irregularPlurals, pluralRules
-  );
-
-  /**
-   * Singularize a word.
-   *
-   * @type {Function}
-   */
-  pluralize.singular = replaceWord(
-    irregularPlurals, irregularSingles, singularRules
-  );
-
-  /**
-   * Add a pluralization rule to the collection.
-   *
-   * @param {(string|RegExp)} rule
-   * @param {string}          replacement
-   */
-  pluralize.addPluralRule = function (rule, replacement) {
-    pluralRules.push([sanitizeRule(rule), replacement]);
-  };
-
-  /**
-   * Add a singularization rule to the collection.
-   *
-   * @param {(string|RegExp)} rule
-   * @param {string}          replacement
-   */
-  pluralize.addSingularRule = function (rule, replacement) {
-    singularRules.push([sanitizeRule(rule), replacement]);
-  };
-
-  /**
-   * Add an uncountable word rule.
-   *
-   * @param {(string|RegExp)} word
-   */
-  pluralize.addUncountableRule = function (word) {
-    if (typeof word === 'string') {
-      uncountables[word.toLowerCase()] = true;
-      return;
-    }
-
-    // Set singular and plural references for the word.
-    pluralize.addPluralRule(word, '$0');
-    pluralize.addSingularRule(word, '$0');
-  };
-
-  /**
-   * Add an irregular word definition.
-   *
-   * @param {String} single
-   * @param {String} plural
-   */
-  pluralize.addIrregularRule = function (single, plural) {
-    plural = plural.toLowerCase();
-    single = single.toLowerCase();
-
-    irregularSingles[single] = plural;
-    irregularPlurals[plural] = single;
-  };
-
-  /**
-   * Irregular rules.
-   */
-  [
-    // Pronouns.
-    ['I', 'we'],
-    ['me', 'us'],
-    ['he', 'they'],
-    ['she', 'they'],
-    ['them', 'them'],
-    ['myself', 'ourselves'],
-    ['yourself', 'yourselves'],
-    ['itself', 'themselves'],
-    ['herself', 'themselves'],
-    ['himself', 'themselves'],
-    ['themself', 'themselves'],
-    ['is', 'are'],
-    ['this', 'these'],
-    ['that', 'those'],
-    // Words ending in with a consonant and `o`.
-    ['echo', 'echoes'],
-    ['dingo', 'dingoes'],
-    ['volcano', 'volcanoes'],
-    ['tornado', 'tornadoes'],
-    ['torpedo', 'torpedoes'],
-    // Ends with `us`.
-    ['genus', 'genera'],
-    ['viscus', 'viscera'],
-    // Ends with `ma`.
-    ['stigma', 'stigmata'],
-    ['stoma', 'stomata'],
-    ['dogma', 'dogmata'],
-    ['lemma', 'lemmata'],
-    ['schema', 'schemata'],
-    ['anathema', 'anathemata'],
-    // Other irregular rules.
-    ['ox', 'oxen'],
-    ['axe', 'axes'],
-    ['die', 'dice'],
-    ['yes', 'yeses'],
-    ['foot', 'feet'],
-    ['eave', 'eaves'],
-    ['goose', 'geese'],
-    ['tooth', 'teeth'],
-    ['quiz', 'quizzes'],
-    ['human', 'humans'],
-    ['proof', 'proofs'],
-    ['carve', 'carves'],
-    ['valve', 'valves'],
-    ['thief', 'thieves'],
-    ['genie', 'genies'],
-    ['groove', 'grooves'],
-    ['pickaxe', 'pickaxes'],
-    ['whiskey', 'whiskies']
-  ].forEach(function (rule) {
-    return pluralize.addIrregularRule(rule[0], rule[1]);
-  });
-
-  /**
-   * Pluralization rules.
-   */
-  [
-    [/s?$/i, 's'],
-    [/([^aeiou]ese)$/i, '$1'],
-    [/(ax|test)is$/i, '$1es'],
-    [/(alias|[^aou]us|tlas|gas|ris)$/i, '$1es'],
-    [/(e[mn]u)s?$/i, '$1s'],
-    [/([^l]ias|[aeiou]las|[emjzr]as|[iu]am)$/i, '$1'],
-    [/(alumn|syllab|octop|vir|radi|nucle|fung|cact|stimul|termin|bacill|foc|uter|loc|strat)(?:us|i)$/i, '$1i'],
-    [/(alumn|alg|vertebr)(?:a|ae)$/i, '$1ae'],
-    [/(seraph|cherub)(?:im)?$/i, '$1im'],
-    [/(her|at|gr)o$/i, '$1oes'],
-    [/(agend|addend|millenni|dat|extrem|bacteri|desiderat|strat|candelabr|errat|ov|symposi|curricul|automat|quor)(?:a|um)$/i, '$1a'],
-    [/(apheli|hyperbat|periheli|asyndet|noumen|phenomen|criteri|organ|prolegomen|hedr|automat)(?:a|on)$/i, '$1a'],
-    [/sis$/i, 'ses'],
-    [/(?:(kni|wi|li)fe|(ar|l|ea|eo|oa|hoo)f)$/i, '$1$2ves'],
-    [/([^aeiouy]|qu)y$/i, '$1ies'],
-    [/([^ch][ieo][ln])ey$/i, '$1ies'],
-    [/(x|ch|ss|sh|zz)$/i, '$1es'],
-    [/(matr|cod|mur|sil|vert|ind|append)(?:ix|ex)$/i, '$1ices'],
-    [/(m|l)(?:ice|ouse)$/i, '$1ice'],
-    [/(pe)(?:rson|ople)$/i, '$1ople'],
-    [/(child)(?:ren)?$/i, '$1ren'],
-    [/eaux$/i, '$0'],
-    [/m[ae]n$/i, 'men'],
-    ['thou', 'you']
-  ].forEach(function (rule) {
-    return pluralize.addPluralRule(rule[0], rule[1]);
-  });
-
-  /**
-   * Singularization rules.
-   */
-  [
-    [/s$/i, ''],
-    [/(ss)$/i, '$1'],
-    [/((a)naly|(b)a|(d)iagno|(p)arenthe|(p)rogno|(s)ynop|(t)he)(?:sis|ses)$/i, '$1sis'],
-    [/(^analy)(?:sis|ses)$/i, '$1sis'],
-    [/(wi|kni|(?:after|half|high|low|mid|non|night|[^\w]|^)li)ves$/i, '$1fe'],
-    [/(ar|(?:wo|[ae])l|[eo][ao])ves$/i, '$1f'],
-    [/([^aeiouy]|qu)ies$/i, '$1y'],
-    [/(^[pl]|zomb|^(?:neck)?t|[aeo][lt]|cut)ies$/i, '$1ie'],
-    [/(\b(?:mon|smil))ies$/i, '$1ey'],
-    [/(m|l)ice$/i, '$1ouse'],
-    [/(seraph|cherub)im$/i, '$1'],
-    [/(x|ch|ss|sh|zz|tto|go|cho|alias|[^aou]us|tlas|gas|(?:her|at|gr)o|ris)(?:es)?$/i, '$1'],
-    [/(e[mn]u)s?$/i, '$1'],
-    [/(movie|twelve)s$/i, '$1'],
-    [/(cris|test|diagnos)(?:is|es)$/i, '$1is'],
-    [/(alumn|syllab|octop|vir|radi|nucle|fung|cact|stimul|termin|bacill|foc|uter|loc|strat)(?:us|i)$/i, '$1us'],
-    [/(agend|addend|millenni|dat|extrem|bacteri|desiderat|strat|candelabr|errat|ov|symposi|curricul|quor)a$/i, '$1um'],
-    [/(apheli|hyperbat|periheli|asyndet|noumen|phenomen|criteri|organ|prolegomen|hedr|automat)a$/i, '$1on'],
-    [/(alumn|alg|vertebr)ae$/i, '$1a'],
-    [/(cod|mur|sil|vert|ind)ices$/i, '$1ex'],
-    [/(matr|append)ices$/i, '$1ix'],
-    [/(pe)(rson|ople)$/i, '$1rson'],
-    [/(child)ren$/i, '$1'],
-    [/(eau)x?$/i, '$1'],
-    [/men$/i, 'man']
-  ].forEach(function (rule) {
-    return pluralize.addSingularRule(rule[0], rule[1]);
-  });
-
-  /**
-   * Uncountable rules.
-   */
-  [
-    // Singular words with no plurals.
-    'advice',
-    'agenda',
-    'bison',
-    'bream',
-    'buffalo',
-    'carp',
-    'chassis',
-    'cod',
-    'cooperation',
-    'corps',
-    'digestion',
-    'debris',
-    'diabetes',
-    'energy',
-    'equipment',
-    'elk',
-    'excretion',
-    'expertise',
-    'flounder',
-    'gallows',
-    'garbage',
-    'graffiti',
-    'headquarters',
-    'health',
-    'herpes',
-    'highjinks',
-    'homework',
-    'information',
-    'jeans',
-    'justice',
-    'kudos',
-    'labour',
-    'machinery',
-    'mackerel',
-    'media',
-    'mews',
-    'moose',
-    'news',
-    'pike',
-    'plankton',
-    'pliers',
-    'pollution',
-    'premises',
-    'rain',
-    'rice',
-    'salmon',
-    'scissors',
-    'series',
-    'sewage',
-    'shambles',
-    'shrimp',
-    'species',
-    'staff',
-    'swine',
-    'trout',
-    'tuna',
-    'whiting',
-    'wildebeest',
-    'wildlife',
-    'you',
-    // Regexes.
-    /pox$/i, // "chickpox", "smallpox"
-    /ois$/i,
-    /deer$/i, // "deer", "reindeer"
-    /fish$/i, // "fish", "blowfish", "angelfish"
-    /sheep$/i,
-    /measles$/i,
-    /[^aeiou]ese$/i // "chinese", "japanese"
-  ].forEach(pluralize.addUncountableRule);
-
-  return pluralize;
-});
-
-},{}]},{},[1]);
+},{}],319:[function(require,module,exports){
+arguments[4][315][0].apply(exports,arguments)
+},{"dup":315}]},{},[1]);
